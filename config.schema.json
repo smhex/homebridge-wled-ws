@@ -1,7 +1,9 @@
 {
-  "pluginAlias": "ExampleHomebridgePlugin",
+  "pluginAlias": "wled-ws",
   "pluginType": "platform",
   "singular": true,
+  "headerDisplay": "Homebridge plugin for LED strips controlled by WLED",
+  "footerDisplay": "For a detailed description, see the [README](https://github.com/smhex/homebridge-wled-ws#readme) file.",
   "schema": {
     "type": "object",
     "properties": {
@@ -9,7 +11,7 @@
         "title": "Name",
         "type": "string",
         "required": true,
-        "default": "Example Dynamic Platform"
+        "default": "wled-ws platform"
       }
     }
   }

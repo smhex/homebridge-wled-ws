@@ -1,16 +1,22 @@
 {
-  "private": true,
-  "displayName": "Plugin Name",
-  "name": "homebridge-plugin-name",
-  "version": "1.0.0",
-  "description": "A short description about what your plugin does.",
+  "private": false,
+  "displayName": "Homebridge Wled WS",
+  "name": "homebridge-wled-ws",
+  "version": "0.0.1",
+  "description": "WLED strips plugin for Homebridge",
   "license": "Apache-2.0",
+  "author": "smhex <smhex@mailbox.org>",
+  "keywords": [
+    "homebridge-plugin",
+    "homebridge-wled-ws",
+    "wled"
+  ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/USERNAME/GITHUB_PROJECT_NAME.git"
+    "url": "https://github.com/smhex/homebridge-wled-ws.git"
   },
   "bugs": {
-    "url": "https://github.com/USERNAME/GITHUB_PROJECT_NAME/issues"
+    "url": "https://github.com/smhex/homebridge-wled-ws/issues"
   },
   "engines": {
     "node": "^18.17.0 || ^20.9.0",
@@ -23,9 +29,6 @@
     "build": "rimraf ./dist && tsc",
     "prepublishOnly": "npm run lint && npm run build"
   },
-  "keywords": [
-    "homebridge-plugin"
-  ],
   "dependencies": {},
   "devDependencies": {
     "@types/node": "^18.16.20",
