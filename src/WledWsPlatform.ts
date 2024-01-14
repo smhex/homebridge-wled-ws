@@ -1,7 +1,7 @@
 import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic } from 'homebridge';
 
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
-import { WledWsPlatformAccessory } from './platformAccessory';
+import { WledWsPlatformAccessory } from './WledWsAccessory';
 
 /**
  * HomebridgePlatform

@@ -1,6 +1,6 @@
 import { Service, PlatformAccessory, CharacteristicValue } from 'homebridge';
 
-import { WledWsHomebridgePlatform } from './platform';
+import { WledWsHomebridgePlatform } from './WledWsPlatform';
 
 /**
  * Platform Accessory

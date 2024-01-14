@@ -1,5 +1,6 @@
-## 0.0.4-beta.2 (2024-01-13)
+## 0.0.4-beta.3 (2024-01-14)
 
 ### Improvements
 
-- **General**: Added meta information to package.json
+- **General**: Improved build workflows
+- **General**: Refactored file system structure
