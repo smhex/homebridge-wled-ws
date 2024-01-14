@@ -29,7 +29,9 @@
     "build": "rimraf ./dist && tsc",
     "prepublishOnly": "npm run lint && npm run build"
   },
-  "dependencies": {},
+  "dependencies": {
+    "wled-client": "^0.22.1"
+  },
   "devDependencies": {
     "@types/node": "^18.16.20",
     "@typescript-eslint/eslint-plugin": "^5.62.0",
