@@ -13,7 +13,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/smhex/homebridge-wled-ws.git"
+    "url": "git+https://github.com/smhex/homebridge-wled-ws.git"
   },
   "bugs": {
     "url": "https://github.com/smhex/homebridge-wled-ws/issues"
