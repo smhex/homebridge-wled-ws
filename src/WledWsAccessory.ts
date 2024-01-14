@@ -1,6 +1,7 @@
 import { Service, PlatformAccessory, CharacteristicValue } from 'homebridge';
-
 import { WledWsHomebridgePlatform } from './WledWsPlatform';
+import { WLEDClient } from 'wled-client';
+import { Logger } from 'homebridge';
 
 /**
  * Platform Accessory
@@ -21,14 +22,17 @@ export class WledWsPlatformAccessory {
 
   constructor(
     private readonly platform: WledWsHomebridgePlatform,
+    private readonly log: Logger,
     private readonly accessory: PlatformAccessory,
   ) {
+
+    this.log = log;
 
     // set accessory information
     this.accessory.getService(this.platform.Service.AccessoryInformation)!
       .setCharacteristic(this.platform.Characteristic.Manufacturer, 'smhex')
       .setCharacteristic(this.platform.Characteristic.Model, 'Wled')
-      .setCharacteristic(this.platform.Characteristic.SerialNumber, '0');
+      .setCharacteristic(this.platform.Characteristic.SerialNumber, '0000');
 
     // get the LightBulb service if it exists, otherwise create a new LightBulb service
     // you can create multiple services for each accessory
@@ -89,6 +93,8 @@ export class WledWsPlatformAccessory {
       this.platform.log.debug('Triggering motionSensorOneService:', motionDetected);
       this.platform.log.debug('Triggering motionSensorTwoService:', !motionDetected);
     }, 10000);
+
+    this.init();
   }
 
   /**
@@ -136,6 +142,13 @@ export class WledWsPlatformAccessory {
     this.exampleStates.Brightness = value as number;
 
     this.platform.log.debug('Set Characteristic Brightness -> ', value);
+  }
+
+  async init(): Promise<boolean> {
+    this.platform.log.info('Create wled-client instance');
+    const wledClient = new WLEDClient('192.168.30.72');
+    await wledClient.init();
+    return true;
   }
 
 }
