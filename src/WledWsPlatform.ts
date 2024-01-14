@@ -31,6 +31,11 @@ export class WledWsHomebridgePlatform implements DynamicPlatformPlugin {
       // run the method to discover / register your devices as accessories
       this.discoverDevices();
     });
+
+    this.api.on('shutdown', () => {
+      log.debug('Executed shutdown callback');
+      this.disconnectDevices();
+    });
   }
 
   /**
@@ -109,4 +114,13 @@ export class WledWsHomebridgePlatform implements DynamicPlatformPlugin {
       }
     }
   }
+
+  /**
+   * On shutdown close all existing connections
+   */
+  disconnectDevices() {
+    this.log.info('WLED shutdown...');
+  }
+
 }
+

@@ -10,6 +10,7 @@ import { Logger } from 'homebridge';
  */
 export class WledWsPlatformAccessory {
   private service: Service;
+  private wledClient;
 
   /**
    * These are just used to create a working example
@@ -145,10 +146,21 @@ export class WledWsPlatformAccessory {
   }
 
   async init(): Promise<boolean> {
-    this.platform.log.info('Create wled-client instance');
+    this.platform.log.info('Connect WLED instance');
     const wledClient = new WLEDClient('192.168.30.72');
     await wledClient.init();
+
+    this.platform.log.info(`Device ready: version ${wledClient.info.version}`);
+
+    wledClient.on('update:state', () => {
+      this.platform.log.info(`Device state updated ${wledClient.info.name}`);
+    });
     return true;
+  }
+
+  disconnect(){
+    this.platform.log.info('Disconnect WLED instance');
+    this.wledClient.disconnect();
   }
 
 }
