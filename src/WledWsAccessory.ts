@@ -1,5 +1,6 @@
-import { Service, PlatformAccessory, CharacteristicValue } from 'homebridge';
+import { Service, PlatformAccessory, CharacteristicValue, Controller } from 'homebridge';
 import { WledWsHomebridgePlatform } from './WledWsPlatform';
+import { WledController } from './WledController';
 import { WLEDClient } from 'wled-client';
 import { Logger } from 'homebridge';
 
@@ -146,20 +147,26 @@ export class WledWsPlatformAccessory {
   }
 
   async init(): Promise<boolean> {
-    this.platform.log.info('Connect WLED instance');
-    const wledClient = new WLEDClient('192.168.30.72');
-    await wledClient.init();
-
-    this.platform.log.info(`Device ready: version ${wledClient.info.version}`);
+    const controller = <WledController>this.accessory.context.device;
+    this.platform.log.info('Connect to controller %s at address %s', controller.name, controller.address);
+    const wledClient = new WLEDClient(controller.address);
+    //wledClient.on('error', e => this.platform.log.error('Error event', e));
+    try {
+      await wledClient.init();
+      this.platform.log.info(`Controller %s ready: version ${wledClient.info.version}`, controller.name);
+    } catch(e) {
+      this.platform.log.error('Caught rejected \'init\' promise.');
+    }
 
     wledClient.on('update:state', () => {
-      this.platform.log.info(`Device state updated ${wledClient.info.name}`);
+      this.platform.log.info(`Controller %s state updated ${wledClient.info.name}`, controller.name);
     });
     return true;
   }
 
   disconnect(){
-    this.platform.log.info('Disconnect WLED instance');
+    const controller = <WledController>this.accessory.context.device;
+    this.platform.log.info('Disconnect controller %s', controller.name);
     this.wledClient.disconnect();
   }
 
