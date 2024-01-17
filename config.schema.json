@@ -8,11 +8,93 @@
     "type": "object",
     "properties": {
       "name": {
-        "title": "Name",
+        "title": "Plugin Platform Name",
         "type": "string",
         "required": true,
-        "default": "wled-ws platform"
+        "default": "wled-ws platform",
+        "description": "This name is only visible in the Homebridge logs."
+      },
+      "controllers": {
+        "title": "Controller",
+        "type": "array",
+        "items": {
+          "title": "Controller",
+          "type": "object",
+          "properties": {
+            "name": {
+              "title": "Name",
+              "type": "string",
+              "required": true,
+              "description": "This name is used as accessory name in Homekit"
+            },
+            "address": {
+              "title": "IP Address / Hostname",
+              "type": "string",
+              "required": true,
+              "format": "hostname",
+              "description": "Enter IP address or hostname"
+            }
+          }
+        }
+      },
+
+      "logging": {
+        "title": "Logging",
+        "type": "boolean",
+        "default": false,
+        "description": "Enables logging"
       }
     }
-  }
+  },
+
+  "form": [
+    {
+      "type": "fieldset",
+      "expandable": true,
+      "title": "Required Plugin Settings",
+      "description": "Configure neccessary plugin settings",
+      "items": [
+          "name"
+      ]
+    },
+
+    {
+      "type": "fieldset",
+      "title": "Controllers",
+      "description": "Configure devices running WLED",
+      "expandable": true,
+      "expanded": false,
+      "items": [
+        {
+          "notitle": true,
+          "key": "controllers",
+          "type": "array",
+          "items": [
+            {
+              "items": [
+                {
+                  "key": "controllers[].name",
+                  "notitle": true
+                },
+                {
+                  "key": "controllers[].address",
+                  "notitle": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    
+    {
+      "type": "fieldset",
+      "expandable": true,
+      "title": "Advanced Settings",
+      "description": "Don't change these, unless you understand what you're doing.",
+      "items": [
+        "logging"
+      ]
+    }
+  ]
 }
