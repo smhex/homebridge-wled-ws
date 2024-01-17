@@ -2,7 +2,7 @@
   "private": false,
   "displayName": "Homebridge Wled Ws",
   "name": "homebridge-wled-ws",
-  "version": "0.0.4-beta.4",
+  "version": "0.0.5",
   "description": "WLED strips plugin for Homebridge",
   "license": "Apache-2.0",
   "author": "smhex <smhex@mailbox.org>",
@@ -13,7 +13,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/smhex/homebridge-wled-ws.git"
+    "url": "git+https://github.com/smhex/homebridge-wled-ws.git"
   },
   "bugs": {
     "url": "https://github.com/smhex/homebridge-wled-ws/issues"
@@ -31,6 +31,9 @@
   },
   "dependencies": {
     "wled-client": "^0.22.1"
+  },
+  "publishConfig": {
+    "@smhex:registry": "https://npm.pkg.github.com"
   },
   "devDependencies": {
     "@types/node": "^18.16.20",
