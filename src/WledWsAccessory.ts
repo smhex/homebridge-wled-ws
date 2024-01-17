@@ -1,4 +1,4 @@
-import { Service, PlatformAccessory, CharacteristicValue, Controller } from 'homebridge';
+import { Service, PlatformAccessory, CharacteristicValue } from 'homebridge';
 import { WledWsHomebridgePlatform } from './WledWsPlatform';
 import { WledController } from './WledController';
 import { WLEDClient } from 'wled-client';

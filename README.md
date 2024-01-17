@@ -11,7 +11,7 @@
 
 This is a Homebridge dynamic platform plugin for controlling LED strips using Websockets. It is based on the fantastic [wled-client](https://github.com/ShiftLimits/wled-client) library, which provides access to WLED's JSON API using websockets.
 
-> [!NOTE]
+> [!NOTE] 
 > Websockets are enabled by default since WLED version 0.10.2
 
 ### Configuration
