@@ -3,6 +3,7 @@ import { WledWsHomebridgePlatform } from './WledWsPlatform';
 import { WledController } from './WledController';
 import { WLEDClient } from 'wled-client';
 import { Logger } from 'homebridge';
+import Timeout = NodeJS.Timeout;
 
 /**
  * Platform Accessory
@@ -12,6 +13,11 @@ import { Logger } from 'homebridge';
 export class WledWsPlatformAccessory {
   private service: Service;
   private wledClient;
+  private connClosed = false;
+  private wsPingIntervalMillis = 5000;
+  private wsPingIntervalId: Timeout | null = null;
+  private wsReconnectIntervalId: Timeout | null = null;
+  private wsReconnectIntervalMillis = 10000;
 
   /**
    * These are just used to create a working example
@@ -42,7 +48,7 @@ export class WledWsPlatformAccessory {
 
     // set the service name, this is what is displayed as the default name on the Home app
     // in this example we are using the name we stored in the `accessory.context` in the `discoverDevices` method.
-    this.service.setCharacteristic(this.platform.Characteristic.Name, accessory.context.device.exampleDisplayName);
+    this.service.setCharacteristic(this.platform.Characteristic.Name, accessory.context.device.name);
 
     // each service must implement at-minimum the "required characteristics" for the given service type
     // see https://developers.homebridge.io/#/service/Lightbulb
@@ -54,7 +60,8 @@ export class WledWsPlatformAccessory {
 
     // register handlers for the Brightness Characteristic
     this.service.getCharacteristic(this.platform.Characteristic.Brightness)
-      .onSet(this.setBrightness.bind(this));       // SET - bind to the 'setBrightness` method below
+      .onSet(this.setBrightness.bind(this))       // SET - bind to the 'setBrightness` method below
+      .onGet(this.getBrightness.bind(this));      // GET - bind to the `getBrightness` method below
 
     /**
      * Creating multiple services of the same type.
@@ -67,36 +74,8 @@ export class WledWsPlatformAccessory {
      * can use the same sub type id.)
      */
 
-    // Example: add two "motion sensor" services to the accessory
-    const motionSensorOneService = this.accessory.getService('Motion Sensor One Name') ||
-      this.accessory.addService(this.platform.Service.MotionSensor, 'Motion Sensor One Name', 'YourUniqueIdentifier-1');
 
-    const motionSensorTwoService = this.accessory.getService('Motion Sensor Two Name') ||
-      this.accessory.addService(this.platform.Service.MotionSensor, 'Motion Sensor Two Name', 'YourUniqueIdentifier-2');
-
-    /**
-     * Updating characteristics values asynchronously.
-     *
-     * Example showing how to update the state of a Characteristic asynchronously instead
-     * of using the `on('get')` handlers.
-     * Here we change update the motion sensor trigger states on and off every 10 seconds
-     * the `updateCharacteristic` method.
-     *
-     */
-    let motionDetected = false;
-    setInterval(() => {
-      // EXAMPLE - inverse the trigger
-      motionDetected = !motionDetected;
-
-      // push the new value to HomeKit
-      motionSensorOneService.updateCharacteristic(this.platform.Characteristic.MotionDetected, motionDetected);
-      motionSensorTwoService.updateCharacteristic(this.platform.Characteristic.MotionDetected, !motionDetected);
-
-      this.platform.log.debug('Triggering motionSensorOneService:', motionDetected);
-      this.platform.log.debug('Triggering motionSensorTwoService:', !motionDetected);
-    }, 10000);
-
-    this.init();
+    this.connect();
   }
 
   /**
@@ -107,7 +86,13 @@ export class WledWsPlatformAccessory {
     // implement your own code to turn your device on/off
     this.exampleStates.On = value as boolean;
 
-    this.platform.log.debug('Set Characteristic On ->', value);
+    // org debug
+    this.platform.log.info('Set Characteristic On ->', value);
+    if (value) {
+      this.wledClient.turnOn();
+    } else{
+      this.wledClient.turnOff();
+    }
   }
 
   /**
@@ -127,7 +112,8 @@ export class WledWsPlatformAccessory {
     // implement your own code to check if the device is on
     const isOn = this.exampleStates.On;
 
-    this.platform.log.debug('Get Characteristic On ->', isOn);
+    // org debg
+    this.platform.log.info('Get Characteristic On ->', isOn);
 
     // if you need to return an error to show the device as "Not Responding" in the Home app:
     // throw new this.platform.api.hap.HapStatusError(this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
@@ -143,31 +129,89 @@ export class WledWsPlatformAccessory {
     // implement your own code to set the brightness
     this.exampleStates.Brightness = value as number;
 
-    this.platform.log.debug('Set Characteristic Brightness -> ', value);
+    // org log debug
+    this.platform.log.info('Set Characteristic Brightness -> ', value);
+    this.wledClient.setBrightness(value);
   }
 
-  async init(): Promise<boolean> {
-    const controller = <WledController>this.accessory.context.device;
-    this.platform.log.info('Connect to controller %s at address %s', controller.name, controller.address);
-    const wledClient = new WLEDClient(controller.address);
-    //wledClient.on('error', e => this.platform.log.error('Error event', e));
-    try {
-      await wledClient.init();
-      this.platform.log.info(`Controller %s ready: version ${wledClient.info.version}`, controller.name);
-    } catch(e) {
-      this.platform.log.error('Caught rejected \'init\' promise.');
-    }
+  /**
+    */
+  async getBrightness(): Promise<CharacteristicValue> {
 
-    wledClient.on('update:state', () => {
-      this.platform.log.info(`Controller %s state updated ${wledClient.info.name}`, controller.name);
+    // implement your own code to check if the device is on
+    const brightness = this.exampleStates.Brightness;
+
+    // org debg
+    this.platform.log.info('Get Characteristic Brightness ->', brightness);
+
+    // if you need to return an error to show the device as "Not Responding" in the Home app:
+    // throw new this.platform.api.hap.HapStatusError(this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
+
+    return brightness;
+  }
+
+  /**
+   *
+   * Connect the controller
+   */
+  async connect(): Promise<boolean> {
+
+    this.connClosed = false;
+
+    const controller = <WledController>this.accessory.context.device;
+    this.log.info('Connect to controller %s at address %s', controller.name, controller.address);
+    this.wledClient = new WLEDClient(controller.address);
+
+    this.wledClient.on('open', () => {
+      this.log.info('Controller %s connected', controller.name);
     });
+
+    this.wledClient.on('close', () => {
+      this.log.info('Controller %s disconnected', controller.name);
+    });
+
+    // update accessory state
+    this.wledClient.on('update:state', () => {
+      this.updateState();
+
+      //this.platform.log.debug(`Received state update for controller %s ${JSON.stringify(this.wledClient.state)}`, controller.name);
+      this.log.info(`Received state update for controller %s ${JSON.stringify(this.wledClient.state)}`, controller.name);
+    });
+
+    /**
+    wledClient.on('error', (error) => {
+      this.log.error('Controller %s communication error: ' + error.message);
+      this.clearWsPingInterval();
+      if (!this.connClosed) {
+        this.setWsReconnectInterval(listener);
+      }
+    });
+    */
+    try {
+      await this.wledClient.init();
+      this.log.info(`Controller %s version is ${this.wledClient.info.version}`, controller.name);
+    } catch(e) {
+      this.log.error('Caught rejected \'init\' promise.');
+
+    }
     return true;
   }
 
+  updateState(){
+    this.exampleStates.On = this.wledClient.state.on;
+    this.exampleStates.Brightness = this.wledClient.state.brightness;
+    this.service.updateCharacteristic(this.platform.Characteristic.On, this.exampleStates.On);
+    this.service.updateCharacteristic(this.platform.Characteristic.Brightness, this.exampleStates.Brightness);
+  }
+
   disconnect(){
-    const controller = <WledController>this.accessory.context.device;
-    this.platform.log.info('Disconnect controller %s', controller.name);
-    this.wledClient.disconnect();
+    if (!this.connClosed){
+      const controller = <WledController>this.accessory.context.device;
+      this.log.info('Disconnect controller %s', controller.name);
+      this.wledClient.disconnect();
+      this.connClosed = true;
+    }
+
   }
 
 }
