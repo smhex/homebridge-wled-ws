@@ -1,13 +1,8 @@
-## 0.0.4-beta.4 (2024-01-17)
-
-### Features
-
-- Added support for Lightbulb service (On/Off and Brightness)
-- Added UI based plugin configuration
+## 0.0.6-beta.0 (2024-01-18)
 
 ### Improvements
 
-- **General**: State changes from other sources than Homekit are sync'ed (e.g. WLED app, Website)
+- **General**: Fixed wrong mapping of brightness value
 
 
 ### Known issues

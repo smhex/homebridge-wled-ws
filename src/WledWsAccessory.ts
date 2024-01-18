@@ -131,7 +131,7 @@ export class WledWsPlatformAccessory {
 
     // org log debug
     this.platform.log.info('Set Characteristic Brightness -> ', value);
-    this.wledClient.setBrightness(value);
+    this.wledClient.setBrightness(Math.round(this.exampleStates.Brightness*255/100));
   }
 
   /**
@@ -199,7 +199,7 @@ export class WledWsPlatformAccessory {
 
   updateState(){
     this.exampleStates.On = this.wledClient.state.on;
-    this.exampleStates.Brightness = this.wledClient.state.brightness;
+    this.exampleStates.Brightness = Math.round(this.wledClient.state.brightness*100/255);
     this.service.updateCharacteristic(this.platform.Characteristic.On, this.exampleStates.On);
     this.service.updateCharacteristic(this.platform.Characteristic.Brightness, this.exampleStates.Brightness);
   }
