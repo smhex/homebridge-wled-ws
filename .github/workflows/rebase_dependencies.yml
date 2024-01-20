@@ -2,7 +2,7 @@ name: Automatic Rebase
 on:
   push:
     branches:
-      - master
+      - main
 jobs:
   rebase:
     name: Rebase `dependencies` with `master`
@@ -15,5 +15,5 @@ jobs:
       - run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git rebase origin/master
+          git rebase origin/main
           git push origin dependencies --force
