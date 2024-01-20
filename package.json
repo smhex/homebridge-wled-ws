@@ -9,7 +9,8 @@
   "keywords": [
     "homebridge-plugin",
     "homebridge-wled-ws",
-    "wled"
+    "wled",
+    "homebridge"
   ],
   "repository": {
     "type": "git",
