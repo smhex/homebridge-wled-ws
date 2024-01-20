@@ -1,3 +1,4 @@
+# Note: requires read/write permissions for workflows (Settings/Actions/General)
 name: Automatic Rebase
 on:
   push:
@@ -5,7 +6,7 @@ on:
       - main
 jobs:
   rebase:
-    name: Rebase `dependencies` with `master`
+    name: Rebase "dependencies" with "main"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
