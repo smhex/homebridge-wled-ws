@@ -10,3 +10,5 @@ updates:
     # Check the npm registry for updates every day (weekdays)
     schedule:
       interval: "weekly"
+    # Use this branch to test before merging into main
+    target-branch: "dependencies"
