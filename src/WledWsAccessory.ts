@@ -32,15 +32,10 @@ export class WledWsPlatformAccessory {
     private readonly platform: WledWsHomebridgePlatform,
     private readonly log: Logger,
     private readonly accessory: PlatformAccessory,
+    private readonly loggingEnabled : boolean,
   ) {
 
     this.log = log;
-
-    // set accessory information
-    this.accessory.getService(this.platform.Service.AccessoryInformation)!
-      .setCharacteristic(this.platform.Characteristic.Manufacturer, 'smhex')
-      .setCharacteristic(this.platform.Characteristic.Model, 'Wled')
-      .setCharacteristic(this.platform.Characteristic.SerialNumber, '0000');
 
     // get the LightBulb service if it exists, otherwise create a new LightBulb service
     // you can create multiple services for each accessory
@@ -146,36 +141,44 @@ export class WledWsPlatformAccessory {
 
     // if you need to return an error to show the device as "Not Responding" in the Home app:
     // throw new this.platform.api.hap.HapStatusError(this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
-
     return brightness;
   }
 
   /**
-   *
-   * Connect the controller
+   * Connect the controller and bind the callback handlers for
+   * 	state, info, effects, palettes, presets, deviceOptions, lightCapabilities, config
    */
   async connect(): Promise<boolean> {
 
     this.connClosed = false;
 
     const controller = <WledController>this.accessory.context.device;
-    this.log.info('Connect to controller %s at address %s', controller.name, controller.address);
+    this.log.info('Connecting to controller %s at address %s', controller.name, controller.address);
     this.wledClient = new WLEDClient(controller.address);
 
     this.wledClient.on('open', () => {
-      this.log.info('Controller %s connected', controller.name);
+      this.connected();
     });
 
     this.wledClient.on('close', () => {
-      this.log.info('Controller %s disconnected', controller.name);
+      this.disconnected();
     });
 
     // update accessory state
     this.wledClient.on('update:state', () => {
-      this.updateState();
+      this.stateReceived();
+    });
 
-      //this.platform.log.debug(`Received state update for controller %s ${JSON.stringify(this.wledClient.state)}`, controller.name);
-      this.log.info(`Received state update for controller %s ${JSON.stringify(this.wledClient.state)}`, controller.name);
+    this.wledClient.on('update:presets', () => {
+      this.presetsReceived();
+    });
+
+    this.wledClient.on('update:effects', () => {
+      this.effectsReceived();
+    });
+
+    this.wledClient.on('update:config', () => {
+      this.configReceived();
     });
 
     /**
@@ -189,29 +192,106 @@ export class WledWsPlatformAccessory {
     */
     try {
       await this.wledClient.init();
-      this.log.info(`Controller %s version is ${this.wledClient.info.version}`, controller.name);
+      this.updateAccessoryInformation();
     } catch(e) {
       this.log.error('Caught rejected \'init\' promise.');
-
     }
     return true;
   }
 
-  updateState(){
+  /**
+   * Callback: each time controller's state changes this function is called. State changes can
+   * triggered by user interaction or other clients
+   */
+  stateReceived(){
+    const controller = <WledController>this.accessory.context.device;
+    this.log.info(`Received state for controller %s ${this.loggingEnabled?JSON.stringify(this.wledClient.state):''}`, controller.name);
     this.exampleStates.On = this.wledClient.state.on;
     this.exampleStates.Brightness = Math.round(this.wledClient.state.brightness*100/255);
     this.service.updateCharacteristic(this.platform.Characteristic.On, this.exampleStates.On);
     this.service.updateCharacteristic(this.platform.Characteristic.Brightness, this.exampleStates.Brightness);
+    if (!this.exampleStates.On){
+      //this.refreshPresets();
+    }
   }
 
-  disconnect(){
-    if (!this.connClosed){
-      const controller = <WledController>this.accessory.context.device;
-      this.log.info('Disconnect controller %s', controller.name);
-      this.wledClient.disconnect();
-      this.connClosed = true;
-    }
+  /**
+   * Callback: each time controller's presets changes this function is called. Preset changes can
+   * triggered by user interaction or other clients
+   */
+  presetsReceived(){
+    const controller = <WledController>this.accessory.context.device;
+    this.log.info(`Received presets for controller %s ${this.loggingEnabled?JSON.stringify(this.wledClient.presets):''}`, controller.name);
+  }
 
+  /**
+   * Callback: each time controller's effects changes this function is called. Effect changes can
+   * triggered by user interaction or other clients
+   */
+  effectsReceived(){
+    const controller = <WledController>this.accessory.context.device;
+    this.log.info(`Received effects for controller %s ${this.loggingEnabled?JSON.stringify(this.wledClient.effects):''}`, controller.name);
+  }
+
+  /**
+   * Callback: each time controller's config changes this function is called. Config changes can
+   * triggered by user interaction or other clients
+   */
+  configReceived(){
+    const controller = <WledController>this.accessory.context.device;
+    this.log.info(`Received config for controller %s ${this.loggingEnabled?JSON.stringify(this.wledClient.config):''}`, controller.name);
+  }
+
+  /**
+   * Refresh presets to update preset information. This is done, when the controller is turned off
+   * to avoid too much cpu load on the controller when the lights or effetcs are on. Presets can be
+   * configured by the user or an API anytime - so we need to update this information regularly.
+   */
+  refreshPresets(){
+    const controller = <WledController>this.accessory.context.device;
+    this.log.info('Requesting presets for controller %s', controller.name);
+    this.wledClient.refreshPresets();
+  }
+
+  /**
+   * Refresh effects to update effect information.
+   */
+  refreshEffects(){
+    const controller = <WledController>this.accessory.context.device;
+    this.log.info('Requesting effetcs for controller %s', controller.name);
+    this.wledClient.refreshEffects();
+  }
+
+  /**
+   * Callback: connection to the controller is established
+   */
+  connected(){
+    const controller = <WledController>this.accessory.context.device;
+    this.log.info('Controller %s connected', controller.name);
+  }
+
+  /**
+   * Callback: connection to the controller is closed
+   */
+  disconnected(){
+    const controller = <WledController>this.accessory.context.device;
+    this.log.info('Controller %s disconnected', controller.name);
+  }
+
+  /**
+   * After successful connect to the controller, its properties are read and set as
+   * accessory information.
+   */
+  updateAccessoryInformation(){
+    const controller = <WledController>this.accessory.context.device;
+    this.log.debug(`Received info for controller %s (${JSON.stringify(this.wledClient)})`, controller.name);
+    this.accessory.getService(this.platform.Service.AccessoryInformation)!
+      .setCharacteristic(this.platform.Characteristic.Manufacturer, this.wledClient.info.brand)
+      .setCharacteristic(this.platform.Characteristic.Model, this.wledClient.info.product)
+      .setCharacteristic(this.platform.Characteristic.FirmwareRevision, this.wledClient.info.version)
+      .setCharacteristic(this.platform.Characteristic.SerialNumber, this.wledClient.info.mac);
   }
 
 }
+
+
