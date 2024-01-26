@@ -9,6 +9,7 @@
 
 This is a Homebridge dynamic platform plugin for controlling LED strips using Websockets. It is based on the fantastic [wled-client](https://github.com/ShiftLimits/wled-client) library, which provides access to WLED's JSON API using websockets.
 
+
 > [!NOTE] 
 > Websockets are enabled by default since WLED version 0.10.2
 
@@ -31,8 +32,13 @@ Using Homebridge's integrated JSON Editor requires the following configuration e
     "logging": false
 }
 ```
+### Why using websockets instead of MQTT or HTTP?
+
+Before starting the implementation of this plugin I intended to use WLED's MQTT feature to control my LED strips. While sending data in JSON format to the WLED controller is straightforward, it was difficult for me to parse the answer, which is in XML format. I am not aware of an existing MQTT Homebridge plugin to handle such a device. The HTTP interface is more consistent in that sense, but requires polling to get state updates when the WLED state is modified outside Homekit/Homebridge (e.g. by mobile apps or other smart home automation systems). The websocket approach allows real-time state updates for all connected clients. 
+
 
 ### TODOs
 - harden controller communication (reconnects)
 - support color picker
 - add effects and presets
+- add support for playlists
