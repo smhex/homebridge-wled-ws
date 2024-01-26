@@ -2,14 +2,15 @@
   "private": false,
   "displayName": "Homebridge Wled Ws",
   "name": "homebridge-wled-ws",
-  "version": "0.0.6-beta.1",
+  "version": "0.0.6",
   "description": "WLED strips plugin for Homebridge",
   "license": "Apache-2.0",
   "author": "smhex <smhex@mailbox.org>",
   "keywords": [
     "homebridge-plugin",
     "homebridge-wled-ws",
-    "wled"
+    "wled",
+    "homebridge"
   ],
   "repository": {
     "type": "git",
@@ -42,8 +43,8 @@
     "eslint": "^8.45.0",
     "homebridge": "^1.7.0",
     "nodemon": "^3.0.3",
-    "rimraf": "^3.0.2",
+    "rimraf": "^5.0.5",
     "ts-node": "^10.9.1",
-    "typescript": "^4.9.5"
+    "typescript": "^5.3.3"
   }
 }
