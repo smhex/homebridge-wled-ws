@@ -157,28 +157,28 @@ export class WledWsPlatformAccessory {
     this.wledClient = new WLEDClient(controller.address);
 
     this.wledClient.on('open', () => {
-      this.connected();
+      this.onConnected();
     });
 
     this.wledClient.on('close', () => {
-      this.disconnected();
+      this.onDisconnected();
     });
 
     // update accessory state
     this.wledClient.on('update:state', () => {
-      this.stateReceived();
+      this.onStateReceived();
     });
 
     this.wledClient.on('update:presets', () => {
-      this.presetsReceived();
+      this.onPresetsReceived();
     });
 
     this.wledClient.on('update:effects', () => {
-      this.effectsReceived();
+      this.onEffectsReceived();
     });
 
     this.wledClient.on('update:config', () => {
-      this.configReceived();
+      this.onConfigReceived();
     });
 
     /**
@@ -203,7 +203,7 @@ export class WledWsPlatformAccessory {
    * Callback: each time controller's state changes this function is called. State changes can
    * triggered by user interaction or other clients
    */
-  stateReceived(){
+  onStateReceived(){
     const controller = <WledController>this.accessory.context.device;
     this.log.info(`Received state for controller %s ${this.loggingEnabled?JSON.stringify(this.wledClient.state):''}`, controller.name);
     this.exampleStates.On = this.wledClient.state.on;
@@ -219,7 +219,7 @@ export class WledWsPlatformAccessory {
    * Callback: each time controller's presets changes this function is called. Preset changes can
    * triggered by user interaction or other clients
    */
-  presetsReceived(){
+  onPresetsReceived(){
     const controller = <WledController>this.accessory.context.device;
     this.log.info(`Received presets for controller %s ${this.loggingEnabled?JSON.stringify(this.wledClient.presets):''}`, controller.name);
   }
@@ -228,7 +228,7 @@ export class WledWsPlatformAccessory {
    * Callback: each time controller's effects changes this function is called. Effect changes can
    * triggered by user interaction or other clients
    */
-  effectsReceived(){
+  onEffectsReceived(){
     const controller = <WledController>this.accessory.context.device;
     this.log.info(`Received effects for controller %s ${this.loggingEnabled?JSON.stringify(this.wledClient.effects):''}`, controller.name);
   }
@@ -237,7 +237,7 @@ export class WledWsPlatformAccessory {
    * Callback: each time controller's config changes this function is called. Config changes can
    * triggered by user interaction or other clients
    */
-  configReceived(){
+  onConfigReceived(){
     const controller = <WledController>this.accessory.context.device;
     this.log.info(`Received config for controller %s ${this.loggingEnabled?JSON.stringify(this.wledClient.config):''}`, controller.name);
   }
@@ -265,7 +265,7 @@ export class WledWsPlatformAccessory {
   /**
    * Callback: connection to the controller is established
    */
-  connected(){
+  onConnected(){
     const controller = <WledController>this.accessory.context.device;
     this.log.info('Controller %s connected', controller.name);
   }
@@ -273,9 +273,17 @@ export class WledWsPlatformAccessory {
   /**
    * Callback: connection to the controller is closed
    */
-  disconnected(){
+  onDisconnected(){
     const controller = <WledController>this.accessory.context.device;
     this.log.info('Controller %s disconnected', controller.name);
+  }
+
+  /**
+   * Callback: connection error
+   */
+  onError(){
+    const controller = <WledController>this.accessory.context.device;
+    this.log.info('Controller %s error', controller.name);
   }
 
   /**
@@ -290,6 +298,8 @@ export class WledWsPlatformAccessory {
       .setCharacteristic(this.platform.Characteristic.Model, this.wledClient.info.product)
       .setCharacteristic(this.platform.Characteristic.FirmwareRevision, this.wledClient.info.version)
       .setCharacteristic(this.platform.Characteristic.SerialNumber, this.wledClient.info.mac);
+
+
   }
 
 }
