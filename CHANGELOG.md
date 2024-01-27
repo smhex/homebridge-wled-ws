@@ -1,14 +1,11 @@
-## 0.0.6 (2024-01-25)
+## 0.0.7-beta.0 (2024-01-27)
 
 ### Improvements
 
-- **General**: Fixed wrong mapping of brightness value
-- **Other**: Output log messages according to plugin settings
-- **Other**: Connection state and callback handling
+- **Communication**: WLED controller communication survives restart of WLED
+- **Communication**: Re-connect if WLED controller communication stopps or could not be started
 
 
 ### Known issues
 
-- **Communication**: WLED controller communication does not survive restart of WLED
-- **Communication**: WLED controller communication does not start if controller is unreachable
 - **Features**: Color is not adjustable
