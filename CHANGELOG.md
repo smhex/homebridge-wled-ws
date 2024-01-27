@@ -3,9 +3,8 @@
 ### Improvements
 
 - **Communication**: WLED controller communication survives restart of WLED
-- **Communication**: Re-connect if WLED controller communication stopps or could not be started
-
 
 ### Known issues
 
+- **Communication**: Re-connect if WLED controller communication stopps or could not be started
 - **Features**: Color is not adjustable

@@ -153,7 +153,7 @@ export class WledWsPlatformAccessory {
     this.connClosed = false;
 
     const controller = <WledController>this.accessory.context.device;
-    this.log.info('Connecting to controller %s at address %s', controller.name, controller.address);
+    //this.log.info(`${isReconnect?'Reconnecting':'Connecting'} to controller %s at address %s`, controller.name, controller.address);
     this.wledClient = new WLEDClient(controller.address);
 
     this.wledClient.on('open', () => {
@@ -190,6 +190,7 @@ export class WledWsPlatformAccessory {
       this.updateAccessoryInformation();
     } catch(e) {
       this.log.error('Connection error controller %s at address %s', controller.name, controller.address);
+      //setTimeout(this.connect, 5000, true);
     }
     return true;
   }
@@ -293,8 +294,6 @@ export class WledWsPlatformAccessory {
       .setCharacteristic(this.platform.Characteristic.Model, this.wledClient.info.product)
       .setCharacteristic(this.platform.Characteristic.FirmwareRevision, this.wledClient.info.version)
       .setCharacteristic(this.platform.Characteristic.SerialNumber, this.wledClient.info.mac);
-
-
   }
 
 }
