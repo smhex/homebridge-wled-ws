@@ -181,20 +181,15 @@ export class WledWsPlatformAccessory {
       this.onConfigReceived();
     });
 
-    /**
-    wledClient.on('error', (error) => {
-      this.log.error('Controller %s communication error: ' + error.message);
-      this.clearWsPingInterval();
-      if (!this.connClosed) {
-        this.setWsReconnectInterval(listener);
-      }
+    this.wledClient.on('error', (error) => {
+      this.log.error('Controller %s communication error: ' + error.message, controller.name );
     });
-    */
+
     try {
       await this.wledClient.init();
       this.updateAccessoryInformation();
     } catch(e) {
-      this.log.error('Caught rejected \'init\' promise.');
+      this.log.error('Connection error controller %s at address %s', controller.name, controller.address);
     }
     return true;
   }
