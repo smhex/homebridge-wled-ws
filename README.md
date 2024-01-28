@@ -48,7 +48,7 @@ Before starting the implementation of this plugin I intended to use WLED's MQTT 
 
 
 ## TODOs
-- harden controller communication (reconnects)
+- ~~harden controller communication (reconnects)~~
 - support color picker
 - add effects and presets
 - add support for playlists
