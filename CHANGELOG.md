@@ -1,8 +1,9 @@
-## 0.0.7-beta.0 (2024-01-27)
+## 0.0.7-beta.1 (2024-01-28)
 
 ### Improvements
 
 - **Communication**: WLED controller communication survives restart of WLED
+- **Versioning**: Fixed node dependencies in package.json
 
 ### Known issues
 
