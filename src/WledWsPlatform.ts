@@ -18,6 +18,7 @@ export class WledWsHomebridgePlatform implements DynamicPlatformPlugin {
 
   // holds a list of controller
   private controllerMap = new Map();
+  private accessoryMap = new Map();
 
   constructor(
     public readonly log: Logger,
@@ -101,7 +102,7 @@ export class WledWsHomebridgePlatform implements DynamicPlatformPlugin {
 
           // create the accessory handler for the restored accessory
           // this is imported from `platformAccessory.ts`
-          new WledWsPlatformAccessory(this, this.log, existingAccessory, this.config.logging);
+          this.accessoryMap.set(uuid, new WledWsPlatformAccessory(this, this.log, existingAccessory, this.config.logging));
 
         // it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, eg.:
         // remove platform accessories when no longer present
@@ -120,7 +121,7 @@ export class WledWsHomebridgePlatform implements DynamicPlatformPlugin {
 
           // create the accessory handler for the newly create accessory
           // this is imported from `platformAccessory.ts`
-          new WledWsPlatformAccessory(this, this.log, accessory, this.config.logging);
+          this.accessoryMap.set(uuid, new WledWsPlatformAccessory(this, this.log, accessory, this.config.logging));
 
           // link the accessory to your platform
           this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
@@ -140,14 +141,17 @@ export class WledWsHomebridgePlatform implements DynamicPlatformPlugin {
     if (accessoriesToBeRemoved.length > 0) {
       this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, accessoriesToBeRemoved);
     }
-
   }
 
   /**
    * On shutdown close all existing connections
    */
   disconnectDevices() {
-    this.log.info('WLED shutdown...');
+    this.log.info('Shutdown - disconnecting all accessories');
+    for (const accessory of this.accessoryMap.values()) {
+      accessory.disconnect();
+    }
+
   }
 
 }

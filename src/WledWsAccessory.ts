@@ -3,6 +3,7 @@ import { WledWsHomebridgePlatform } from './WledWsPlatform';
 import { WledController } from './WledController';
 import { WLEDClient } from 'wled-client';
 import { Logger } from 'homebridge';
+import { PLUGIN_NAME, PLUGIN_AUTHOR } from './settings';
 import Timeout = NodeJS.Timeout;
 
 /**
@@ -13,11 +14,10 @@ import Timeout = NodeJS.Timeout;
 export class WledWsPlatformAccessory {
   private service: Service;
   private wledClient;
-  private connClosed = false;
-  private wsPingIntervalMillis = 5000;
-  private wsPingIntervalId: Timeout | null = null;
-  private wsReconnectIntervalId: Timeout | null = null;
-  private wsReconnectIntervalMillis = 10000;
+  private connectionClosed = false;
+  private connectionEstablished = false;
+  private reconnectIntervalId: Timeout | null = null;
+  private reconnectIntervalMillis = 10000;
 
   /**
    * These are just used to create a working example
@@ -69,8 +69,15 @@ export class WledWsPlatformAccessory {
      * can use the same sub type id.)
      */
 
+    // Set initial accessory information - this will be overwritten as soon as the controller is connected
+    this.accessory.getService(this.platform.Service.AccessoryInformation)!
+      .setCharacteristic(this.platform.Characteristic.Manufacturer, PLUGIN_AUTHOR)
+      .setCharacteristic(this.platform.Characteristic.Model, PLUGIN_NAME)
+      .setCharacteristic(this.platform.Characteristic.FirmwareRevision, 'not set')
+      .setCharacteristic(this.platform.Characteristic.SerialNumber, 'not set');
 
-    this.connect();
+    // Connect the controller
+    this.connect(false);
   }
 
   /**
@@ -78,6 +85,13 @@ export class WledWsPlatformAccessory {
    * These are sent when the user changes the state of an accessory, for example, turning on a Light bulb.
    */
   async setOn(value: CharacteristicValue) {
+
+    // only proceed if controller is connected
+    if (!this.connectionEstablished){
+      const controller = <WledController>this.accessory.context.device;
+      this.log.error('Controller %s not connected', controller.name);
+      throw new this.platform.api.hap.HapStatusError(this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
+    }
     // implement your own code to turn your device on/off
     this.exampleStates.On = value as boolean;
 
@@ -121,6 +135,14 @@ export class WledWsPlatformAccessory {
    * These are sent when the user changes the state of an accessory, for example, changing the Brightness
    */
   async setBrightness(value: CharacteristicValue) {
+
+    // only proceed if controller is connected
+    if (!this.connectionEstablished){
+      const controller = <WledController>this.accessory.context.device;
+      this.log.error('Controller %s not connected', controller.name);
+      throw new this.platform.api.hap.HapStatusError(this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
+    }
+
     // implement your own code to set the brightness
     this.exampleStates.Brightness = value as number;
 
@@ -148,12 +170,13 @@ export class WledWsPlatformAccessory {
    * Connect the controller and bind the callback handlers for
    * 	state, info, effects, palettes, presets, deviceOptions, lightCapabilities, config
    */
-  async connect(): Promise<boolean> {
+  async connect(isReconnect : boolean): Promise<boolean> {
 
-    this.connClosed = false;
+    this.connectionClosed = false;
 
     const controller = <WledController>this.accessory.context.device;
-    //this.log.info(`${isReconnect?'Reconnecting':'Connecting'} to controller %s at address %s`, controller.name, controller.address);
+    this.log.info(`${isReconnect?'Reconnecting':'Connecting'} to controller %s at address %s`, controller.name, controller.address);
+
     this.wledClient = new WLEDClient(controller.address);
 
     this.wledClient.on('open', () => {
@@ -181,19 +204,33 @@ export class WledWsPlatformAccessory {
       this.onConfigReceived();
     });
 
-    /**
     this.wledClient.on('error', (error) => {
-      this.log.error('Controller %s communication error: ' + error.message, controller.name );
-    });*/
+      this.onError(error);
+    });
 
     try {
       await this.wledClient.init();
-      this.updateAccessoryInformation();
-    } catch(e) {
+    } catch {
       this.log.error('Connection error controller %s at address %s', controller.name, controller.address);
-      //setTimeout(this.connect, 5000, true);
     }
     return true;
+  }
+
+  /**
+   * Disconnects the controller. This happens on shutdown of the plugin only
+   */
+  disconnect(){
+    if (!this.connectionClosed){
+      const controller = <WledController>this.accessory.context.device;
+      this.log.info('Disconnect controller %s', controller.name);
+
+      if (this.reconnectIntervalId!==null){
+        clearTimeout(this.reconnectIntervalId);
+      }
+
+      this.connectionClosed = true;
+      this.wledClient.disconnect();
+    }
   }
 
   /**
@@ -203,13 +240,11 @@ export class WledWsPlatformAccessory {
   onStateReceived(){
     const controller = <WledController>this.accessory.context.device;
     this.log.info(`Received state for controller %s ${this.loggingEnabled?JSON.stringify(this.wledClient.state):''}`, controller.name);
+    this.updateAccessoryInformation();
     this.exampleStates.On = this.wledClient.state.on;
     this.exampleStates.Brightness = Math.round(this.wledClient.state.brightness*100/255);
     this.service.updateCharacteristic(this.platform.Characteristic.On, this.exampleStates.On);
     this.service.updateCharacteristic(this.platform.Characteristic.Brightness, this.exampleStates.Brightness);
-    if (!this.exampleStates.On){
-      //this.refreshPresets();
-    }
   }
 
   /**
@@ -265,22 +300,35 @@ export class WledWsPlatformAccessory {
   onConnected(){
     const controller = <WledController>this.accessory.context.device;
     this.log.info('Controller %s connected', controller.name);
+    this.connectionEstablished = true;
   }
 
   /**
    * Callback: connection to the controller is closed
    */
   onDisconnected(){
+    this.connectionEstablished = false;
     const controller = <WledController>this.accessory.context.device;
     this.log.info('Controller %s disconnected', controller.name);
   }
 
   /**
-   * Callback: connection error
+   * Callback: connection to the controller throws an error (e.g. is closed by controller)
    */
-  onError(){
+  onError(error){
     const controller = <WledController>this.accessory.context.device;
-    this.log.info('Controller %s error', controller.name);
+    this.log.error('Controller %s communication error: ' + error.message, controller.name );
+    this.connectionEstablished = false;
+
+    if (this.reconnectIntervalId!==null){
+      clearTimeout(this.reconnectIntervalId);
+    }
+
+    if (!this.connectionClosed){
+      this.reconnectIntervalId = setTimeout(() => {
+        this.connect(true);
+      }, this.reconnectIntervalMillis);
+    }
   }
 
   /**
