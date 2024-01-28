@@ -37,7 +37,7 @@
     "@smhex:registry": "https://npm.pkg.github.com"
   },
   "devDependencies": {
-    "@types/node": "^20.11.5",
+    "@types/node": "^18.16.20",
     "@typescript-eslint/eslint-plugin": "^6.19.0",
     "@typescript-eslint/parser": "^6.19.0",
     "eslint": "^8.45.0",

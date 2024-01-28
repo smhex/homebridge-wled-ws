@@ -181,9 +181,10 @@ export class WledWsPlatformAccessory {
       this.onConfigReceived();
     });
 
+    /**
     this.wledClient.on('error', (error) => {
       this.log.error('Controller %s communication error: ' + error.message, controller.name );
-    });
+    });*/
 
     try {
       await this.wledClient.init();
