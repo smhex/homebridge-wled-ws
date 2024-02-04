@@ -46,9 +46,14 @@ Using Homebridge's integrated JSON Editor requires the following configuration e
 
 Before starting the implementation of this plugin I intended to use WLED's MQTT feature to control my LED strips. While sending data in JSON format to the WLED controller is straightforward, it was difficult for me to parse the answer, which is in XML format. I am not aware of an existing MQTT Homebridge plugin to handle such a device. The HTTP interface is more consistent in that sense, but requires polling to get state updates when the WLED state is modified outside Homekit/Homebridge (e.g. by mobile apps or other smart home automation systems). The websocket approach allows real-time state updates for all connected clients. 
 
+## Limitations
+
+1. WLED supports segments, however the created Homekit accessory only controls the first (main) segment
+2. The brightness is set for the whole strip, brightness per segment is ignored
+
 
 ## TODOs
 - ~~harden controller communication (reconnects)~~
-- support color picker
+- ~~support color picker~~
 - add effects and presets
 - add support for playlists

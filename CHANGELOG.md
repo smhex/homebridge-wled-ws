@@ -1,7 +1,9 @@
-## 0.0.8-beta.0 (2024-01-28)
+## 0.0.8-beta.1 (2024-02-04)
 
 ### Improvements
 
+- **Features**: Color can be adjusted if hardware supports it
+
 ### Known issues
 
-- **Features**: Color is not adjustable
+

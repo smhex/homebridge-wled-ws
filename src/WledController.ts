@@ -3,3 +3,10 @@ export interface WledController{
     name : string;
     address : string;
 }
+
+export enum LightCapability {
+    OnOff = 0,
+    RGB = 1,
+    White = 2,
+    RGBW = 3
+  }
