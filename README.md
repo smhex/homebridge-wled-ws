@@ -40,7 +40,7 @@ Using Homebridge's integrated JSON Editor requires the following configuration e
 | :----------| :-------------------------- | :------ |
 | name       | Name of the WLED controller | This name is used for the acessory in Homekit and for the Homebridge logs |
 | address    | IP address or host name     | Enter the address of the controller - make sure it is the same which is shown as Client IP in the WLED Wifi settings |
-| logging    | True or False               | If enabled (=True) WLED's JSON data will be logged. Leave it disabled if everything works as expected. If want to file an issue on Github turn it for later analysis|
+| logging    | True or False               | If enabled (=True) WLED's JSON data will be logged. Leave it disabled if everything works as expected. If you want to file an issue on Github turn it on for later analysis|
 
 ## Why using websockets instead of MQTT or HTTP?
 
