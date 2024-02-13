@@ -2,6 +2,7 @@
 export interface WledController{
     name : string;
     address : string;
+    presets : string;
 }
 
 export enum LightCapability {

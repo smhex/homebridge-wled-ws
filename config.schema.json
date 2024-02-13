@@ -33,6 +33,13 @@
               "required": true,
               "format": "hostname",
               "description": "Enter IP address or hostname"
+            },
+            "presets": {
+              "title": "List of presets",
+              "type": "string",
+              "required": false,
+              "pattern": "^([^,]+(?:,[^,]+)*)?$",
+              "description": "Enter a list of comma separated presets"
             }
           }
         }
@@ -78,6 +85,10 @@
                 },
                 {
                   "key": "controllers[].address",
+                  "notitle": true
+                },
+                {
+                  "key": "controllers[].presets",
                   "notitle": true
                 }
               ]
