@@ -1,12 +1,19 @@
-import { Service, PlatformAccessory, CharacteristicValue } from 'homebridge';
+import { Service, PlatformAccessory, CharacteristicValue, CharacteristicGetCallback, CharacteristicSetCallback} from 'homebridge';
 import { WledWsHomebridgePlatform } from './WledWsPlatform';
-import { WledController, LightCapability } from './WledController';
+import { WledController, LightCapability, WledControllerPreset } from './WledController';
 import { WLEDClient } from 'wled-client';
 import { Logger } from 'homebridge';
 import { PLUGIN_NAME, PLUGIN_AUTHOR } from './settings';
 import { rgbToHsv, hsvToRgb } from './WledUtils';
 import Timeout = NodeJS.Timeout;
 
+/**
+ * Helper interface for dealing with preset
+ */
+interface PresetElementDescription{
+  id : string;
+  name : string;
+}
 
 /**
  * Platform Accessory
@@ -15,7 +22,7 @@ import Timeout = NodeJS.Timeout;
  */
 export class WledWsPlatformAccessory {
   private service : Service;
-  //private switchServices : Service[];
+  private switchServices : Service[] = [];
   private wledClient;
   private connectionClosed = false;
   private connectionEstablished = false;
@@ -34,6 +41,7 @@ export class WledWsPlatformAccessory {
     Value : 0,
   };
 
+
   constructor(
     private readonly platform: WledWsHomebridgePlatform,
     private readonly log: Logger,
@@ -50,7 +58,9 @@ export class WledWsPlatformAccessory {
 
     // set the service name, this is what is displayed as the default name on the Home app
     // in this example we are using the name we stored in the `accessory.context` in the `discoverDevices` method.
+    // in case more services are added, this one will be our primary service
     this.service.setCharacteristic(this.platform.Characteristic.Name, accessory.context.device.name);
+    this.service.setPrimaryService(true);
 
     // each service must implement at-minimum the "required characteristics" for the given service type
     // see https://developers.homebridge.io/#/service/Lightbulb
@@ -86,7 +96,7 @@ export class WledWsPlatformAccessory {
 
     this.ledState.On = value as boolean;
 
-    this.platform.log.info('Controller %s setOn: %s', controller.name, value);
+    this.platform.log.info('Controller %s setOn: %s', controller.name, value ? 'ON' : 'OFF');
     if (value) {
       this.wledClient.turnOn();
     } else{
@@ -110,7 +120,7 @@ export class WledWsPlatformAccessory {
   async getOn(): Promise<CharacteristicValue> {
     const isOn = this.ledState.On;
     const controller = <WledController>this.accessory.context.device;
-    this.platform.log.debug('Controller %s getOn: %s', controller.name, isOn);
+    this.platform.log.debug('Controller %s getOn: %s', controller.name, isOn ? 'ON' : 'OFF');
     return isOn;
   }
 
@@ -314,6 +324,35 @@ export class WledWsPlatformAccessory {
   }
 
   /**
+   * Returns the preset state to Homekit
+   */
+  handleOnPresetGet(preset: WledControllerPreset, callback: CharacteristicGetCallback) {
+    this.platform.log.debug('Controller %s getOn state for preset %s: %s', preset.controller.name, preset.name, preset.on ? 'ON' : 'OFF');
+    callback(null, preset.on);
+  }
+
+  /**
+   * Sets the preset state from Homekit
+   */
+  async handleOnPresetSet(preset: WledControllerPreset, value: CharacteristicValue, callback: CharacteristicSetCallback) {
+    this.platform.log.info('Controller %s setOn state for preset %s: %s', preset.controller.name, preset.name, value ? 'ON' : 'OFF');
+
+    // switch off all other presets
+    for (const service of this.switchServices){
+      service.updateCharacteristic(this.platform.Characteristic.On, false);
+    }
+
+    // switch on new presets
+    preset.on = <boolean>value;
+    if (preset.on){
+      this.wledClient.setPreset(preset.id);
+    } else{
+      this.wledClient.turnOff();
+    }
+    callback(null);
+  }
+
+  /**
    * Callback: each time controller's presets changes this function is called. Preset changes can
    * triggered by user interaction or other clients. This function checks, if the configured presets
    * are available on the controller. If not, a error message is logged to the console
@@ -322,22 +361,67 @@ export class WledWsPlatformAccessory {
     const controller = <WledController>this.accessory.context.device;
     this.log.info(`Received presets for controller %s ${this.loggingEnabled?JSON.stringify(this.wledClient.presets):''}`, controller.name);
 
-    // check if configured presets are available on the controller
+    // check if presets are configured by user and create list of available presets on the controller
     if (controller.presets!==undefined){
       const configuredPresets: string[] = controller.presets.split(',');
-      const controllerPresets: string[] = [];
+
+      const presetList : PresetElementDescription[] = [];
       for (const key in Object.keys(this.wledClient.presets)) {
         if (Object.prototype.hasOwnProperty.call(this.wledClient.presets, key)) {
-          if ((Object.prototype.hasOwnProperty.call(this.wledClient.presets[key], 'name')) &&
-        (Object.prototype.hasOwnProperty.call(this.wledClient.presets[key], 'mainSegment'))){
-            controllerPresets.push(this.wledClient.presets[key].name);
+          if ((Object.prototype.hasOwnProperty.call(this.wledClient.presets[key], 'name'))){
+            presetList.push({id:key, name:this.wledClient.presets[key].name});
           }
         }
       }
 
-      const missingPresets: string[] = configuredPresets.filter(element => !controllerPresets.includes(element));
+      const missingPresets = configuredPresets.filter(str =>
+        !presetList.some(obj => obj.name === str),
+      );
+
       if (missingPresets.length>0){
         this.log.error('Configured preset(s) %s not supported by controller %s', missingPresets, controller.name);
+      }
+
+      // reduce list with presets to the user configured elements
+      const existingPresets = presetList.filter(obj=>configuredPresets.includes(obj.name));
+      for (const key in existingPresets) {
+        const preset = <PresetElementDescription>existingPresets[key];
+
+        // add a switch for each preset in Homekit
+        let presetSwitchService = this.accessory.getServiceById(this.platform.Service.Switch, 'WLED-PRESET-'+preset.id);
+        if (presetSwitchService===undefined){
+          presetSwitchService = this.accessory.addService(this.platform.Service.Switch, preset.name, 'WLED-PRESET-'+preset.id);
+          presetSwitchService.addOptionalCharacteristic(this.platform.Characteristic.ConfiguredName);
+          presetSwitchService.setCharacteristic(this.platform.Characteristic.ConfiguredName, preset.name);
+          this.service.addLinkedService(presetSwitchService);
+        }
+
+        // create a preset object for the callback handler
+        const wledControllerPreset : WledControllerPreset = { name: preset.name, id: preset.id,
+          on:false, hapService: presetSwitchService, controller: controller};
+
+        presetSwitchService.getCharacteristic(this.platform.Characteristic.On)
+          .on('get', (callback) => {
+            this.handleOnPresetGet(wledControllerPreset, callback);
+          })
+          .on('set', (value, callback) => {
+            this.handleOnPresetSet(wledControllerPreset, value, callback);
+          });
+
+        this.switchServices.push(presetSwitchService);
+        this.log.debug('Added preset switch %s (id:%s) for controller %s', preset.name, preset.id, controller.name);
+      }
+
+      // Delete orphaned services which were created earlier and not needed anymore
+      for (let i = 0; i <= 250; i++) {
+        const cachedService = this.accessory.getServiceById(this.platform.Service.Switch, 'WLED-PRESET-'+i);
+        if (cachedService){
+          if (!existingPresets.some(obj => obj.id === i.toString())){
+            this.log.debug('Remove cached preset switch with id %s for controller', i, controller.name);
+            this.service.removeLinkedService(cachedService);
+            this.accessory.removeService(cachedService);
+          }
+        }
       }
     }
   }

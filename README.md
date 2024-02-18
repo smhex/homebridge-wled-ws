@@ -13,7 +13,7 @@ This is a Homebridge dynamic platform plugin for controlling LED strips using We
 > [!NOTE] 
 > Websockets are enabled by default since WLED version 0.10.2
 
-The plugin adds a Lightbulb to Homekit for every configured WLED controller. The Lightbulb can be switched on and off and it's dimmable. Depending on the LED configuration additional services will be made available (e.g. color selection). For each configured preset a switch is created that can be used in an automation.
+The plugin adds a Lightbulb to Homekit for every configured WLED controller. The Lightbulb can be switched on and off and it's dimmable. Depending on the LED configuration additional services will be made available (e.g. color selection). For each configured preset a switch is created that can be used in for  automation. Unlike other plugins the preset selection is not implemented as a Homekit Television service.
 
 ## Configuration
 
@@ -28,7 +28,8 @@ Using Homebridge's integrated JSON Editor requires the following configuration e
     "controllers": [
         {
             "name": "My WLED Controller",
-            "address": "192.168.1.100"
+            "address": "192.168.1.100",
+            "presets": "DoorClosed,DoorOpen"
         }
     ],
     "logging": false
@@ -43,6 +44,9 @@ Using Homebridge's integrated JSON Editor requires the following configuration e
 | presets    | list of presets     | Enter a comma separated list of presets. A switch will be created in Homekit for each preset |
 | logging    | True or False               | If enabled (=True) WLED's JSON data will be logged. Leave it disabled if everything works as expected. If you want to file an issue on Github turn it on for later analysis|
 
+> [!IMPORTANT] 
+> WLED organizes presets by id. This plugin uses names for configuration. When starting, it checks whether the name exists. If not, an error message is generated. In such a case please check the preset name for typos.
+
 ## Why using websockets instead of MQTT or HTTP?
 
 Before starting the implementation of this plugin I intended to use WLED's MQTT feature to control my LED strips. While sending data in JSON format to the WLED controller is straightforward, it was difficult for me to parse the answer, which is in XML format. I am not aware of an existing MQTT Homebridge plugin to handle such a device. The HTTP interface is more consistent in that sense, but requires polling to get state updates when the WLED state is modified outside Homekit/Homebridge (e.g. by mobile apps or other smart home automation systems). The websocket approach allows real-time state updates for all connected clients. 
@@ -56,6 +60,6 @@ Before starting the implementation of this plugin I intended to use WLED's MQTT 
 ## TODOs
 - ~~harden controller communication (reconnects)~~
 - ~~support color picker~~
-- ~~add presets~~
+- ~~add presets and playlists~~
 - add effects
-- add support for playlists
+
