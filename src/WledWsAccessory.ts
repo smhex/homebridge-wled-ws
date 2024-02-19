@@ -364,12 +364,12 @@ export class WledWsPlatformAccessory {
     // check if presets are configured by user and create list of available presets on the controller
     if (controller.presets!==undefined){
       const configuredPresets: string[] = controller.presets.split(',');
-
       const presetList : PresetElementDescription[] = [];
-      for (const key in Object.keys(this.wledClient.presets)) {
+      for (const key of Object.keys(this.wledClient.presets)) {
         if (Object.prototype.hasOwnProperty.call(this.wledClient.presets, key)) {
           if ((Object.prototype.hasOwnProperty.call(this.wledClient.presets[key], 'name'))){
             presetList.push({id:key, name:this.wledClient.presets[key].name});
+            this.log.debug('Got preset %s from controller %s', this.wledClient.presets[key].name, controller.name);
           }
         }
       }
