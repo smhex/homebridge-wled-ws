@@ -3,6 +3,9 @@
 ### Improvements
 
 - **Features**: Added preset support 
+- **Features**: Added color support
+
+- **General**: Updated logging messages
 
 ### Known issues
 
