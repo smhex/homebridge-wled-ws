@@ -1,0 +1,1248 @@
+{
+    "nightlight": {
+        "state": {
+            "on": false,
+            "duration": 60,
+            "mode": 1,
+            "targetBrightness": 0,
+            "remaining": -1
+        }
+    },
+    "options": {
+        "immediate": true,
+        "websocket": {
+            "reconnect": true
+        },
+        "secure": false,
+        "host": "192.168.100.1"
+    },
+    "state": {
+        "on": false,
+        "brightness": 255,
+        "transition": 20,
+        "presetId": -1,
+        "playlistId": -1,
+        "nightlight": {
+            "on": false,
+            "duration": 60,
+            "mode": 1,
+            "targetBrightness": 0,
+            "remaining": -1
+        },
+        "udpSync": {
+            "send": false,
+            "receive": true,
+            "sgrp": 1,
+            "rgrp": 1
+        },
+        "liveDataOverride": 0,
+        "mainSegmentId": 0,
+        "segments": [
+            {
+                "id": 0,
+                "start": 0,
+                "stop": 180,
+                "length": 180,
+                "grouping": 1,
+                "spacing": 0,
+                "offset": 0,
+                "on": true,
+                "freeze": false,
+                "brightness": 255,
+                "cct": 127,
+                "set": 0,
+                "colors": [
+                    [
+                        255,
+                        0,
+                        0,
+                        0
+                    ],
+                    [
+                        0,
+                        0,
+                        0,
+                        0
+                    ],
+                    [
+                        0,
+                        0,
+                        0,
+                        0
+                    ]
+                ],
+                "effectId": 0,
+                "effectSpeed": 128,
+                "effectIntensity": 128,
+                "paletteId": 2,
+                "c1": 128,
+                "c2": 128,
+                "c3": 16,
+                "selected": true,
+                "reverse": false,
+                "mirror": false,
+                "o1": false,
+                "o2": false,
+                "o3": false,
+                "si": 0,
+                "m12": 0
+            }
+        ]
+    },
+    "info": {
+        "version": "0.14.1",
+        "buildId": 2401141,
+        "leds": {
+            "count": 180,
+            "currentPower": 280,
+            "fps": 35,
+            "maxPower": 12000,
+            "maxSegments": 32,
+            "segmentLightCapabilities": [
+                3
+            ],
+            "lightCapabilities": 3,
+            "rgbw": true,
+            "whiteValueInput": 2,
+            "cct": 0
+        },
+        "syncToggleReceive": false,
+        "name": "WLED",
+        "udpPort": 21324,
+        "live": false,
+        "liveseg": -1,
+        "liveSource": "",
+        "liveIp": "",
+        "wsConnectedCount": 1,
+        "effectsCount": 187,
+        "palettesCount": 71,
+        "cpalcount": 0,
+        "maps": [
+            {
+                "id": 0
+            }
+        ],
+        "wifi": {
+            "bssid": "BA:CB:F3:C4:F1:A8",
+            "rssi": -53,
+            "signal": 94,
+            "channel": 11
+        },
+        "fs": {
+            "used": 20,
+            "total": 61,
+            "presetsModifiedTime": 1706457201
+        },
+        "discoveredDevicesCount": 0,
+        "arch": "esp32",
+        "core": "v3.3.6-16-gcc5440f6a2",
+        "lwip": 0,
+        "freeheap": 193032,
+        "uptime": 24384,
+        "time": "2024-1-28, 22:57:53",
+        "options": 79,
+        "brand": "WLED",
+        "product": "FOSS",
+        "mac": "08d1f9193194",
+        "ip": "192.168.100.1"
+    },
+    "effects": [
+        "Solid",
+        "Blink",
+        "Breathe",
+        "Wipe",
+        "Wipe Random",
+        "Random Colors",
+        "Sweep",
+        "Dynamic",
+        "Colorloop",
+        "Rainbow",
+        "Scan",
+        "Scan Dual",
+        "Fade",
+        "Theater",
+        "Theater Rainbow",
+        "Running",
+        "Saw",
+        "Twinkle",
+        "Dissolve",
+        "Dissolve Rnd",
+        "Sparkle",
+        "Sparkle Dark",
+        "Sparkle+",
+        "Strobe",
+        "Strobe Rainbow",
+        "Strobe Mega",
+        "Blink Rainbow",
+        "Android",
+        "Chase",
+        "Chase Random",
+        "Chase Rainbow",
+        "Chase Flash",
+        "Chase Flash Rnd",
+        "Rainbow Runner",
+        "Colorful",
+        "Traffic Light",
+        "Sweep Random",
+        "Chase 2",
+        "Aurora",
+        "Stream",
+        "Scanner",
+        "Lighthouse",
+        "Fireworks",
+        "Rain",
+        "Tetrix",
+        "Fire Flicker",
+        "Gradient",
+        "Loading",
+        "Rolling Balls",
+        "Fairy",
+        "Two Dots",
+        "Fairytwinkle",
+        "Running Dual",
+        "RSVD",
+        "Chase 3",
+        "Tri Wipe",
+        "Tri Fade",
+        "Lightning",
+        "ICU",
+        "Multi Comet",
+        "Scanner Dual",
+        "Stream 2",
+        "Oscillate",
+        "Pride 2015",
+        "Juggle",
+        "Palette",
+        "Fire 2012",
+        "Colorwaves",
+        "Bpm",
+        "Fill Noise",
+        "Noise 1",
+        "Noise 2",
+        "Noise 3",
+        "Noise 4",
+        "Colortwinkles",
+        "Lake",
+        "Meteor",
+        "Meteor Smooth",
+        "Railway",
+        "Ripple",
+        "Twinklefox",
+        "Twinklecat",
+        "Halloween Eyes",
+        "Solid Pattern",
+        "Solid Pattern Tri",
+        "Spots",
+        "Spots Fade",
+        "Glitter",
+        "Candle",
+        "Fireworks Starburst",
+        "Fireworks 1D",
+        "Bouncing Balls",
+        "Sinelon",
+        "Sinelon Dual",
+        "Sinelon Rainbow",
+        "Popcorn",
+        "Drip",
+        "Plasma",
+        "Percent",
+        "Ripple Rainbow",
+        "Heartbeat",
+        "Pacifica",
+        "Candle Multi",
+        "Solid Glitter",
+        "Sunrise",
+        "Phased",
+        "Twinkleup",
+        "Noise Pal",
+        "Sine",
+        "Phased Noise",
+        "Flow",
+        "Chunchun",
+        "Dancing Shadows",
+        "Washing Machine",
+        "RSVD",
+        "Blends",
+        "TV Simulator",
+        "Dynamic Smooth",
+        "Spaceships",
+        "Crazy Bees",
+        "Ghost Rider",
+        "Blobs",
+        "Scrolling Text",
+        "Drift Rose",
+        "Distortion Waves",
+        "Soap",
+        "Octopus",
+        "Waving Cell",
+        "Pixels",
+        "Pixelwave",
+        "Juggles",
+        "Matripix",
+        "Gravimeter",
+        "Plasmoid",
+        "Puddles",
+        "Midnoise",
+        "Noisemeter",
+        "Freqwave",
+        "Freqmatrix",
+        "GEQ",
+        "Waterfall",
+        "Freqpixels",
+        "RSVD",
+        "Noisefire",
+        "Puddlepeak",
+        "Noisemove",
+        "Noise2D",
+        "Perlin Move",
+        "Ripple Peak",
+        "Firenoise",
+        "Squared Swirl",
+        "RSVD",
+        "DNA",
+        "Matrix",
+        "Metaballs",
+        "Freqmap",
+        "Gravcenter",
+        "Gravcentric",
+        "Gravfreq",
+        "DJ Light",
+        "Funky Plank",
+        "RSVD",
+        "Pulser",
+        "Blurz",
+        "Drift",
+        "Waverly",
+        "Sun Radiation",
+        "Colored Bursts",
+        "Julia",
+        "RSVD",
+        "RSVD",
+        "RSVD",
+        "Game Of Life",
+        "Tartan",
+        "Polar Lights",
+        "Swirl",
+        "Lissajous",
+        "Frizzles",
+        "Plasma Ball",
+        "Flow Stripe",
+        "Hiphotic",
+        "Sindots",
+        "DNA Spiral",
+        "Black Hole",
+        "Wavesins",
+        "Rocktaves",
+        "Akemi"
+    ],
+    "palettes": [
+        "Default",
+        "* Random Cycle",
+        "* Color 1",
+        "* Colors 1&2",
+        "* Color Gradient",
+        "* Colors Only",
+        "Party",
+        "Cloud",
+        "Lava",
+        "Ocean",
+        "Forest",
+        "Rainbow",
+        "Rainbow Bands",
+        "Sunset",
+        "Rivendell",
+        "Breeze",
+        "Red & Blue",
+        "Yellowout",
+        "Analogous",
+        "Splash",
+        "Pastel",
+        "Sunset 2",
+        "Beach",
+        "Vintage",
+        "Departure",
+        "Landscape",
+        "Beech",
+        "Sherbet",
+        "Hult",
+        "Hult 64",
+        "Drywet",
+        "Jul",
+        "Grintage",
+        "Rewhi",
+        "Tertiary",
+        "Fire",
+        "Icefire",
+        "Cyane",
+        "Light Pink",
+        "Autumn",
+        "Magenta",
+        "Magred",
+        "Yelmag",
+        "Yelblu",
+        "Orange & Teal",
+        "Tiamat",
+        "April Night",
+        "Orangery",
+        "C9",
+        "Sakura",
+        "Aurora",
+        "Atlantica",
+        "C9 2",
+        "C9 New",
+        "Temperature",
+        "Aurora 2",
+        "Retro Clown",
+        "Candy",
+        "Toxy Reaf",
+        "Fairy Reaf",
+        "Semi Blue",
+        "Pink Candy",
+        "Red Reaf",
+        "Aqua Flash",
+        "Yelblu Hot",
+        "Lite Light",
+        "Red Flash",
+        "Blink Red",
+        "Red Shift",
+        "Red Tide",
+        "Candy2"
+    ],
+    "presets": {
+        "0": {},
+        "1": {
+            "on": true,
+            "brightness": 128,
+            "transition": 10,
+            "mainSegment": 0,
+            "segments": [
+                {
+                    "id": 0,
+                    "start": 0,
+                    "stop": 180,
+                    "grouping": 1,
+                    "spacing": 0,
+                    "of": 0,
+                    "on": true,
+                    "freeze": false,
+                    "brightness": 255,
+                    "cct": 127,
+                    "set": 0,
+                    "name": "",
+                    "colors": [
+                        [
+                            255,
+                            149,
+                            0,
+                            0
+                        ],
+                        [
+                            0,
+                            0,
+                            0,
+                            0
+                        ],
+                        [
+                            0,
+                            0,
+                            0,
+                            0
+                        ]
+                    ],
+                    "effectId": 11,
+                    "effectSpeed": 211,
+                    "effectIntensity": 50,
+                    "paletteId": 2,
+                    "c1": 128,
+                    "c2": 128,
+                    "c3": 16,
+                    "selected": true,
+                    "reverse": false,
+                    "mirror": false,
+                    "o1": false,
+                    "o2": false,
+                    "o3": false,
+                    "si": 0,
+                    "m12": 0
+                }
+            ],
+            "name": "DoorMoving"
+        },
+        "2": {
+            "on": true,
+            "brightness": 255,
+            "transition": 20,
+            "mainSegment": 0,
+            "segments": [
+                {
+                    "id": 0,
+                    "start": 0,
+                    "stop": 180,
+                    "grouping": 1,
+                    "spacing": 0,
+                    "of": 0,
+                    "on": true,
+                    "freeze": false,
+                    "brightness": 255,
+                    "cct": 127,
+                    "set": 0,
+                    "colors": [
+                        [
+                            255,
+                            0,
+                            0,
+                            0
+                        ],
+                        [
+                            0,
+                            0,
+                            0,
+                            0
+                        ],
+                        [
+                            0,
+                            0,
+                            0,
+                            0
+                        ]
+                    ],
+                    "effectId": 0,
+                    "effectSpeed": 128,
+                    "effectIntensity": 128,
+                    "paletteId": 2,
+                    "c1": 128,
+                    "c2": 128,
+                    "c3": 16,
+                    "selected": true,
+                    "reverse": false,
+                    "mirror": false,
+                    "o1": false,
+                    "o2": false,
+                    "o3": false,
+                    "si": 0,
+                    "m12": 0
+                }
+            ],
+            "name": "DoorClosed"
+        },
+        "3": {
+            "on": true,
+            "brightness": 255,
+            "transition": 20,
+            "mainSegment": 0,
+            "segments": [
+                {
+                    "id": 0,
+                    "start": 0,
+                    "stop": 180,
+                    "grouping": 1,
+                    "spacing": 0,
+                    "of": 0,
+                    "on": true,
+                    "freeze": false,
+                    "brightness": 255,
+                    "cct": 127,
+                    "set": 0,
+                    "colors": [
+                        [
+                            8,
+                            255,
+                            0,
+                            0
+                        ],
+                        [
+                            0,
+                            0,
+                            0,
+                            0
+                        ],
+                        [
+                            0,
+                            0,
+                            0,
+                            0
+                        ]
+                    ],
+                    "effectId": 0,
+                    "effectSpeed": 128,
+                    "effectIntensity": 128,
+                    "paletteId": 2,
+                    "c1": 128,
+                    "c2": 128,
+                    "c3": 16,
+                    "selected": true,
+                    "reverse": false,
+                    "mirror": false,
+                    "o1": false,
+                    "o2": false,
+                    "o3": false,
+                    "si": 0,
+                    "m12": 0
+                }
+            ],
+            "name": "DoorOpen"
+        },
+        "4": {
+            "on": true,
+            "brightness": 255,
+            "transition": 20,
+            "mainSegment": 0,
+            "segments": [
+                {
+                    "id": 0,
+                    "start": 0,
+                    "stop": 180,
+                    "grouping": 1,
+                    "spacing": 0,
+                    "of": 0,
+                    "on": true,
+                    "freeze": false,
+                    "brightness": 255,
+                    "cct": 127,
+                    "set": 0,
+                    "colors": [
+                        [
+                            0,
+                            0,
+                            0,
+                            255
+                        ],
+                        [
+                            0,
+                            0,
+                            0,
+                            0
+                        ],
+                        [
+                            0,
+                            0,
+                            0,
+                            0
+                        ]
+                    ],
+                    "effectId": 0,
+                    "effectSpeed": 128,
+                    "effectIntensity": 128,
+                    "paletteId": 2,
+                    "c1": 128,
+                    "c2": 128,
+                    "c3": 16,
+                    "selected": true,
+                    "reverse": false,
+                    "mirror": false,
+                    "o1": false,
+                    "o2": false,
+                    "o3": false,
+                    "si": 0,
+                    "m12": 0
+                }
+            ],
+            "name": "DoorLight"
+        },
+        "5": {
+            "playlist": {
+                "ps": [
+                    1
+                ],
+                "dur": [
+                    100
+                ],
+                "transition": [
+                    20
+                ],
+                "repeat": 0,
+                "end": 0,
+                "r": 0
+            },
+            "on": true,
+            "name": "Play1"
+        }
+    },
+    "deviceOptions": {
+        "debug": false,
+        "alexa": true,
+        "blynk": false,
+        "cronixie": false,
+        "filesystem": true,
+        "huesync": true,
+        "adalight": false,
+        "OTA": true
+    },
+    "lightCapabilities": {
+        "cct": false,
+        "white": true,
+        "rgb": true
+    },
+    "live": {
+        "leds": false
+    },
+    "config": {
+        "rev": [
+            1,
+            0
+        ],
+        "vid": 2401141,
+        "id": {
+            "mdns": "wled",
+            "name": "WLED",
+            "invocationName": "Light"
+        },
+        "network": {
+            "instances": [
+                {
+                    "ssid": "SmartHome",
+                    "pskl": 16,
+                    "ip": [
+                        0,
+                        0,
+                        0,
+                        0
+                    ],
+                    "gateway": [
+                        0,
+                        0,
+                        0,
+                        0
+                    ],
+                    "subnet": [
+                        255,
+                        255,
+                        255,
+                        0
+                    ]
+                }
+            ]
+        },
+        "accessPoint": {
+            "ssid": "WLED-AP",
+            "pskl": 16,
+            "channel": 1,
+            "hide": 0,
+            "openBehavior": 0,
+            "ip": [
+                4,
+                3,
+                2,
+                1
+            ]
+        },
+        "wifi": {
+            "sleep": false,
+            "phy": false
+        },
+        "hardware": {
+            "led": {
+                "total": 180,
+                "maxCurrent": 12000,
+                "maxCurrentPerLED": 55,
+                "cctCorrection": false,
+                "cctFromRGB": false,
+                "cctBlending": 0,
+                "fps": 42,
+                "autoWhiteMode": 255,
+                "ld": true,
+                "instances": [
+                    {
+                        "start": 0,
+                        "length": 180,
+                        "pins": [
+                            16
+                        ],
+                        "colorOrder": 0,
+                        "reverse": false,
+                        "skip": 0,
+                        "type": 30,
+                        "offRefresh": true,
+                        "rgbwm": 0,
+                        "freq": 0
+                    }
+                ]
+            },
+            "com": [],
+            "button": {
+                "max": 4,
+                "pull": true,
+                "instances": [
+                    {
+                        "type": 2,
+                        "pin": [
+                            0
+                        ],
+                        "macros": [
+                            0,
+                            0,
+                            0
+                        ]
+                    },
+                    {
+                        "type": 0,
+                        "pin": [
+                            -1
+                        ],
+                        "macros": [
+                            0,
+                            0,
+                            0
+                        ]
+                    },
+                    {
+                        "type": 0,
+                        "pin": [
+                            -1
+                        ],
+                        "macros": [
+                            0,
+                            0,
+                            0
+                        ]
+                    },
+                    {
+                        "type": 0,
+                        "pin": [
+                            -1
+                        ],
+                        "macros": [
+                            0,
+                            0,
+                            0
+                        ]
+                    }
+                ],
+                "touchThreshold": 32,
+                "mqtt": false
+            },
+            "ir": {
+                "pin": -1,
+                "type": 0,
+                "sel": true
+            },
+            "relay": {
+                "pin": -1,
+                "reverse": false
+            },
+            "baud": 1152,
+            "if": {
+                "i2c-pin": [
+                    -1,
+                    -1
+                ],
+                "spi-pin": [
+                    -1,
+                    -1,
+                    -1
+                ]
+            }
+        },
+        "light": {
+            "scaleBrightness": 100,
+            "paletteBlendingMode": 0,
+            "autoSegments": false,
+            "gammaCorrection": {
+                "brightness": 1,
+                "color": 2.8,
+                "val": 2.8
+            },
+            "transition": {
+                "enabled": true,
+                "fx": true,
+                "duration": 10,
+                "palettes": 0,
+                "rpc": 5
+            },
+            "nightlight": {
+                "mode": 1,
+                "duration": 60,
+                "targetBrightness": 0,
+                "macro": 0
+            }
+        },
+        "defaults": {
+            "preset": 0,
+            "on": false,
+            "brightness": 128
+        },
+        "interfaces": {
+            "sync": {
+                "port0": 21324,
+                "port1": 65506,
+                "receive": {
+                    "brightness": true,
+                    "color": true,
+                    "effects": true,
+                    "groups": 1,
+                    "seg": false,
+                    "sb": false
+                },
+                "send": {
+                    "direct": false,
+                    "button": false,
+                    "alexa": false,
+                    "hue": true,
+                    "macro": false,
+                    "groups": 1,
+                    "ret": 0
+                }
+            },
+            "nodes": {
+                "list": true,
+                "broadcast": true
+            },
+            "live": {
+                "enabled": false,
+                "mso": false,
+                "port": 5568,
+                "multicast": false,
+                "dmx": {
+                    "universe": 1,
+                    "sequenceSkip": false,
+                    "e131prio": 0,
+                    "address": 1,
+                    "dss": 0,
+                    "mode": 4
+                },
+                "timeout": 25,
+                "maxBrightness": false,
+                "noGammaCorrection": true,
+                "offset": 0
+            },
+            "alexa": {
+                "enabled": false,
+                "macros": [
+                    0,
+                    0
+                ],
+                "p": 0
+            },
+            "mqtt": {
+                "enabled": false,
+                "broker": "mosquitto.broker",
+                "port": 1883,
+                "user": "wled",
+                "pskl": 16,
+                "clientId": "wled",
+                "rtn": false,
+                "topics": {
+                    "device": "wled/device",
+                    "group": "wled/all"
+                }
+            },
+            "hue": {
+                "enabled": false,
+                "id": 1,
+                "interval": 25,
+                "receive": {
+                    "on": true,
+                    "brightness": true,
+                    "color": true
+                },
+                "ip": [
+                    192,
+                    168,
+                    100,
+                    100
+                ]
+            },
+            "ntp": {
+                "enabled": true,
+                "host": "0.de.pool.ntp.org",
+                "timezone": 0,
+                "offset": 3600,
+                "ampm": false,
+                "lon": 0,
+                "lat": 0
+            }
+        },
+        "remote": {
+            "remote_enabled": false,
+            "linked_remote": ""
+        },
+        "overlay": {
+            "clock": 0,
+            "countdown": false,
+            "min": 0,
+            "max": 29,
+            "o12pix": 0,
+            "show5MinuteMarks": false,
+            "showSecondsTrail": false
+        },
+        "timers": {
+            "countdown": {
+                "goal": [
+                    20,
+                    1,
+                    1,
+                    0,
+                    0,
+                    0
+                ],
+                "macro": 0
+            },
+            "instances": [
+                {
+                    "enabled": 1,
+                    "hour": 255,
+                    "minute": 0,
+                    "macro": 0,
+                    "dayOfWeek": 127
+                },
+                {
+                    "enabled": 1,
+                    "hour": 255,
+                    "minute": 0,
+                    "macro": 0,
+                    "dayOfWeek": 127
+                }
+            ]
+        },
+        "ota": {
+            "lock": false,
+            "lockWiFi": false,
+            "pskl": 7,
+            "arduinoOTA": true
+        },
+        "usermods": {}
+    },
+    "WSAPI": {
+        "available": true,
+        "reconnect": true,
+        "api_endpoint": "ws://192.168.100.1/ws",
+        "websocket": {
+            "_events": {},
+            "_eventsCount": 4,
+            "_binaryType": "arraybuffer",
+            "_closeCode": 1006,
+            "_closeFrameReceived": false,
+            "_closeFrameSent": false,
+            "_closeMessage": {
+                "type": "Buffer",
+                "data": []
+            },
+            "_closeTimer": null,
+            "_extensions": {},
+            "_paused": false,
+            "_protocol": "",
+            "_readyState": 1,
+            "_receiver": {
+                "_writableState": {
+                    "objectMode": false,
+                    "highWaterMark": 16384,
+                    "finalCalled": false,
+                    "needDrain": false,
+                    "ending": false,
+                    "ended": false,
+                    "finished": false,
+                    "destroyed": false,
+                    "decodeStrings": true,
+                    "defaultEncoding": "utf8",
+                    "length": 1125,
+                    "writing": true,
+                    "corked": 0,
+                    "sync": false,
+                    "bufferProcessing": false,
+                    "writelen": 1125,
+                    "afterWriteTickInfo": null,
+                    "buffered": [],
+                    "bufferedIndex": 0,
+                    "allBuffers": true,
+                    "allNoop": true,
+                    "pendingcb": 1,
+                    "constructed": true,
+                    "prefinished": false,
+                    "errorEmitted": false,
+                    "emitClose": true,
+                    "autoDestroy": true,
+                    "errored": null,
+                    "closed": false,
+                    "closeEmitted": false
+                },
+                "_events": {},
+                "_eventsCount": 6,
+                "_allowSynchronousEvents": false,
+                "_binaryType": "arraybuffer",
+                "_extensions": {},
+                "_isServer": false,
+                "_maxPayload": 104857600,
+                "_skipUTF8Validation": false,
+                "_bufferedBytes": 0,
+                "_buffers": [],
+                "_compressed": false,
+                "_payloadLength": 1121,
+                "_fragmented": 0,
+                "_masked": false,
+                "_fin": true,
+                "_opcode": 1,
+                "_totalPayloadLength": 0,
+                "_messageLength": 0,
+                "_fragments": [],
+                "_errored": false,
+                "_loop": false,
+                "_state": 6
+            },
+            "_sender": {
+                "_extensions": {},
+                "_socket": {
+                    "connecting": false,
+                    "_hadError": false,
+                    "_parent": null,
+                    "_host": null,
+                    "_closeAfterHandlingError": false,
+                    "_readableState": {
+                        "state": 266328,
+                        "highWaterMark": 16384,
+                        "buffer": {
+                            "head": null,
+                            "tail": null,
+                            "length": 0
+                        },
+                        "length": 0,
+                        "pipes": [],
+                        "flowing": true,
+                        "errored": null,
+                        "defaultEncoding": "utf8",
+                        "awaitDrainWriters": null,
+                        "decoder": null,
+                        "encoding": null
+                    },
+                    "_events": {
+                        "end": [
+                            null,
+                            null
+                        ]
+                    },
+                    "_eventsCount": 4,
+                    "_writableState": {
+                        "objectMode": false,
+                        "highWaterMark": 16384,
+                        "finalCalled": false,
+                        "needDrain": false,
+                        "ending": false,
+                        "ended": false,
+                        "finished": false,
+                        "destroyed": false,
+                        "decodeStrings": false,
+                        "defaultEncoding": "utf8",
+                        "length": 0,
+                        "writing": false,
+                        "corked": 0,
+                        "sync": false,
+                        "bufferProcessing": false,
+                        "writecb": null,
+                        "writelen": 0,
+                        "afterWriteTickInfo": null,
+                        "buffered": [],
+                        "bufferedIndex": 0,
+                        "allBuffers": true,
+                        "allNoop": true,
+                        "pendingcb": 0,
+                        "constructed": true,
+                        "prefinished": false,
+                        "errorEmitted": false,
+                        "emitClose": false,
+                        "autoDestroy": true,
+                        "errored": null,
+                        "closed": false,
+                        "closeEmitted": false
+                    },
+                    "allowHalfOpen": false,
+                    "_sockname": null,
+                    "_pendingData": null,
+                    "_pendingEncoding": "",
+                    "server": null,
+                    "_server": null,
+                    "parser": null,
+                    "_httpMessage": null,
+                    "timeout": 0
+                },
+                "_firstFragment": true,
+                "_compress": false,
+                "_bufferedBytes": 0,
+                "_deflating": false,
+                "_queue": []
+            },
+            "_socket": {
+                "connecting": false,
+                "_hadError": false,
+                "_parent": null,
+                "_host": null,
+                "_closeAfterHandlingError": false,
+                "_readableState": {
+                    "state": 266328,
+                    "highWaterMark": 16384,
+                    "buffer": {
+                        "head": null,
+                        "tail": null,
+                        "length": 0
+                    },
+                    "length": 0,
+                    "pipes": [],
+                    "flowing": true,
+                    "errored": null,
+                    "defaultEncoding": "utf8",
+                    "awaitDrainWriters": null,
+                    "decoder": null,
+                    "encoding": null
+                },
+                "_events": {
+                    "end": [
+                        null,
+                        null
+                    ]
+                },
+                "_eventsCount": 4,
+                "_writableState": {
+                    "objectMode": false,
+                    "highWaterMark": 16384,
+                    "finalCalled": false,
+                    "needDrain": false,
+                    "ending": false,
+                    "ended": false,
+                    "finished": false,
+                    "destroyed": false,
+                    "decodeStrings": false,
+                    "defaultEncoding": "utf8",
+                    "length": 0,
+                    "writing": false,
+                    "corked": 0,
+                    "sync": false,
+                    "bufferProcessing": false,
+                    "writecb": null,
+                    "writelen": 0,
+                    "afterWriteTickInfo": null,
+                    "buffered": [],
+                    "bufferedIndex": 0,
+                    "allBuffers": true,
+                    "allNoop": true,
+                    "pendingcb": 0,
+                    "constructed": true,
+                    "prefinished": false,
+                    "errorEmitted": false,
+                    "emitClose": false,
+                    "autoDestroy": true,
+                    "errored": null,
+                    "closed": false,
+                    "closeEmitted": false
+                },
+                "allowHalfOpen": false,
+                "_sockname": null,
+                "_pendingData": null,
+                "_pendingEncoding": "",
+                "server": null,
+                "_server": null,
+                "parser": null,
+                "_httpMessage": null,
+                "timeout": 0
+            },
+            "_bufferedAmount": 0,
+            "_isServer": false,
+            "_redirects": 0,
+            "_autoPong": true,
+            "_url": "ws://192.168.30.72/ws",
+            "_req": null
+        }
+    },
+    "JSONAPI": {
+        "authority": "http://192.168.100.1",
+        "api_endpoint": "http://192.168.100.1/json"
+    },
+    "isReady": {}
+}

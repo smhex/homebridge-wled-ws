@@ -1,9 +1,13 @@
-## 0.0.7 (2024-01-28)
+## 0.0.8-beta.3 (2024-02-19)
 
 ### Improvements
 
-- **Communication**: made WLED controller communication more robust
+- **General**: Added debug log messages 
+
+### Bugfixes
+
+- **Presets**: Presets were incorrectly reported as not supported
 
 ### Known issues
 
-- **Features**: Color is not adjustable
+

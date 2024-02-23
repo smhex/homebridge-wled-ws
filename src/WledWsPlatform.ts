@@ -151,7 +151,6 @@ export class WledWsHomebridgePlatform implements DynamicPlatformPlugin {
     for (const accessory of this.accessoryMap.values()) {
       accessory.disconnect();
     }
-
   }
 
 }
