@@ -327,7 +327,7 @@ export class WledWsPlatformAccessory {
    * Returns the preset state to Homekit
    */
   handleOnPresetGet(preset: WledControllerPreset, callback: CharacteristicGetCallback) {
-    this.platform.log.debug('Controller %s getOn state for preset %s: %s', preset.controller.name, preset.name, preset.on ? 'ON' : 'OFF');
+    this.platform.log.info('Controller %s getOn state for preset %s: %s', preset.controller.name, preset.name, preset.on ? 'ON' : 'OFF');
     callback(null, preset.on);
   }
 
@@ -384,8 +384,7 @@ export class WledWsPlatformAccessory {
 
       // reduce list with presets to the user configured elements
       const existingPresets = presetList.filter(obj=>configuredPresets.includes(obj.name));
-      for (const key in existingPresets) {
-        const preset = <PresetElementDescription>existingPresets[key];
+      for (const preset of existingPresets) {
 
         // add a switch for each preset in Homekit
         let presetSwitchService = this.accessory.getServiceById(this.platform.Service.Switch, 'WLED-PRESET-'+preset.id);
