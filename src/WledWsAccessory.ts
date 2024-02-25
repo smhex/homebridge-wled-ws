@@ -22,7 +22,8 @@ interface PresetElementDescription{
  */
 export class WledWsPlatformAccessory {
   private service : Service;
-  private switchServices : Service[] = [];
+  private presetList : WledControllerPreset[] = [];
+  private activePreset : WledControllerPreset | null = null;
   private wledClient;
   private connectionClosed = false;
   private connectionEstablished = false;
@@ -39,6 +40,7 @@ export class WledWsPlatformAccessory {
     Hue : 0,
     Saturation : 0,
     Value : 0,
+    PresetId : '-1',
   };
 
 
@@ -90,13 +92,13 @@ export class WledWsPlatformAccessory {
     // only proceed if controller is connected
     const controller = <WledController>this.accessory.context.device;
     if (!this.connectionEstablished){
-      this.log.error('Controller %s not connected', controller.name);
+      this.log.error('No connection to controller %s', controller.name);
       throw new this.platform.api.hap.HapStatusError(this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
     }
 
     this.ledState.On = value as boolean;
 
-    this.platform.log.info('Controller %s setOn: %s', controller.name, value ? 'ON' : 'OFF');
+    this.platform.log.info('Set controller %s On state to: %s', controller.name, value ? 'On' : 'Off');
     if (value) {
       this.wledClient.turnOn();
     } else{
@@ -120,7 +122,7 @@ export class WledWsPlatformAccessory {
   async getOn(): Promise<CharacteristicValue> {
     const isOn = this.ledState.On;
     const controller = <WledController>this.accessory.context.device;
-    this.platform.log.debug('Controller %s getOn: %s', controller.name, isOn ? 'ON' : 'OFF');
+    this.platform.log.debug('Get controller %s On state: %s', controller.name, isOn ? 'On' : 'Off');
     return isOn;
   }
 
@@ -134,13 +136,13 @@ export class WledWsPlatformAccessory {
     const controller = <WledController>this.accessory.context.device;
     if (!this.connectionEstablished){
 
-      this.log.error('Controller %s not connected', controller.name);
+      this.log.error('No connection to controller %s', controller.name);
       throw new this.platform.api.hap.HapStatusError(this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
     }
 
     this.ledState.Brightness = value as number;
 
-    this.platform.log.info('Controller %s setBrightness: %s', controller.name, value);
+    this.platform.log.info('Set controller %s brightness to: %s', controller.name, value);
     this.wledClient.setBrightness(Math.round(this.ledState.Brightness*255/100));
   }
 
@@ -150,7 +152,7 @@ export class WledWsPlatformAccessory {
   async getBrightness(): Promise<CharacteristicValue> {
     const brightness = this.ledState.Brightness;
     const controller = <WledController>this.accessory.context.device;
-    this.platform.log.debug('Controller %s getBrightness: %s', controller.name, brightness);
+    this.platform.log.debug('Get controller %s brightness: %s', controller.name, brightness);
     return brightness;
   }
 
@@ -163,14 +165,14 @@ export class WledWsPlatformAccessory {
     // only proceed if controller is connected
     const controller = <WledController>this.accessory.context.device;
     if (!this.connectionEstablished){
-      this.log.error('Controller %s not connected', controller.name);
+      this.log.error('No connection to controller %s', controller.name);
       throw new this.platform.api.hap.HapStatusError(this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
     }
 
     this.ledState.Hue = value as number;
 
     const { r, g, b } = hsvToRgb(value as number / 360, this.ledState.Saturation / 100, this.ledState.Brightness / 100);
-    this.platform.log.info(`Controller %s setHue: %s (RGB: ${r},${g},${b})`, controller.name, value);
+    this.platform.log.info(`Set controller %s hue to: %s (RGB: ${r},${g},${b})`, controller.name, value);
     this.wledClient.setColor([r, g, b]);
   }
 
@@ -180,7 +182,7 @@ export class WledWsPlatformAccessory {
   async getHue() : Promise<CharacteristicValue> {
     const hue = this.ledState.Hue;
     const controller = <WledController>this.accessory.context.device;
-    this.platform.log.debug('Controller %s getHue: %s', controller.name, hue);
+    this.platform.log.debug('Get controller %s hue: %s', controller.name, hue);
     return hue;
   }
 
@@ -193,13 +195,13 @@ export class WledWsPlatformAccessory {
     // only proceed if controller is connected
     const controller = <WledController>this.accessory.context.device;
     if (!this.connectionEstablished){
-      this.log.error('Controller %s not connected', controller.name);
+      this.log.error('No connection to controller %s', controller.name);
       throw new this.platform.api.hap.HapStatusError(this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
     }
 
     this.ledState.Saturation = value as number;
     const { r, g, b } = hsvToRgb(this.ledState.Hue / 360, value as number / 100, this.ledState.Brightness / 100);
-    this.platform.log.info(`Controller %s setSaturation: %s (RGB: ${r},${g},${b})`, controller.name, value);
+    this.platform.log.info(`Set controller %s saturation to: %s (RGB: ${r},${g},${b})`, controller.name, value);
     this.wledClient.setColor([r, g, b]);
   }
 
@@ -209,7 +211,7 @@ export class WledWsPlatformAccessory {
   async getSaturation() : Promise<CharacteristicValue> {
     const saturation = this.ledState.Saturation;
     const controller = <WledController>this.accessory.context.device;
-    this.platform.log.debug('Controller %s getSaturation: %s', controller.name, saturation);
+    this.platform.log.debug('Get controller %s saturation: %s', controller.name, saturation);
     return saturation;
   }
 
@@ -258,7 +260,7 @@ export class WledWsPlatformAccessory {
     try {
       await this.wledClient.init();
     } catch {
-      this.log.error('Connection error controller %s at address %s', controller.name, controller.address);
+      this.log.error('Error connecting controller %s at address %s', controller.name, controller.address);
     }
     return true;
   }
@@ -269,7 +271,7 @@ export class WledWsPlatformAccessory {
   disconnect(){
     if (!this.connectionClosed){
       const controller = <WledController>this.accessory.context.device;
-      this.log.info('Disconnect controller %s', controller.name);
+      this.log.info('Disconnecting controller %s', controller.name);
 
       if (this.reconnectIntervalId!==null){
         clearTimeout(this.reconnectIntervalId);
@@ -286,7 +288,7 @@ export class WledWsPlatformAccessory {
    */
   onStateReceived(){
     const controller = <WledController>this.accessory.context.device;
-    this.log.info(`Received state for controller %s ${this.loggingEnabled?JSON.stringify(this.wledClient.state):''}`, controller.name);
+    this.log.info(`Received controller %s state update ${this.loggingEnabled?JSON.stringify(this.wledClient.state):''}`, controller.name);
 
     // initialize accessory information only once at startup
     if (!this.init){
@@ -296,14 +298,14 @@ export class WledWsPlatformAccessory {
 
     if (this.ledState.On !== this.wledClient.state.on){
       this.ledState.On = this.wledClient.state.on;
-      this.platform.log.info('Controller %s updated ON state: %s', controller.name, this.ledState.On);
+      this.platform.log.info('Controller %s updated current On state to: %s', controller.name, this.ledState.On);
       this.service.updateCharacteristic(this.platform.Characteristic.On, this.ledState.On);
     }
 
     const brightness = Math.round(this.wledClient.state.brightness*100/255);
     if (this.ledState.Brightness !== brightness){
       this.ledState.Brightness = brightness;
-      this.platform.log.info('Controller %s updated brightness: %s', controller.name, this.ledState.Brightness);
+      this.platform.log.info('Controller %s updated current brightness to: %s', controller.name, this.ledState.Brightness);
       this.service.updateCharacteristic(this.platform.Characteristic.Brightness, this.ledState.Brightness);
     }
 
@@ -311,7 +313,7 @@ export class WledWsPlatformAccessory {
     const val = this.wledClient.state.segments[0].colors[0];
     const { h, s, v } = rgbToHsv(val[0], val[1], val[2]);
     if ((this.ledState.Hue!==h*360) || (this.ledState.Saturation!==s*100) || (this.ledState.Value!==v*100)){
-      this.platform.log.debug('Controller %s new color selected: RGB %s:%s:%s -> HSV %s:%s:%s',
+      this.platform.log.debug('Controller %s updated current color to: RGB %s:%s:%s -> HSV %s:%s:%s',
         controller.name, val[0], val[1], val[2], h, s, v);
 
       // store new values and update Homekit
@@ -321,13 +323,49 @@ export class WledWsPlatformAccessory {
       this.service.updateCharacteristic(this.platform.Characteristic.Hue, this.ledState.Hue);
       this.service.updateCharacteristic(this.platform.Characteristic.Saturation, this.ledState.Saturation);
     }
+
+    if (this.ledState.PresetId !== this.wledClient.state.presetId){
+
+      this.platform.log.info('Controller %s updated current preset to: %s', controller.name, this.wledClient.state.presetId);
+
+      // switch off active preset first
+      if (this.activePreset!==null){
+        this.activePreset.on = false;
+        this.platform.log.debug('Set On state for last active preset %s (%s) of controller %s to: %s',
+          this.activePreset.id, this.activePreset.name, this.activePreset.controller.name, this.activePreset.on ? 'On' : 'Off');
+        this.activePreset.hapService.updateCharacteristic(this.platform.Characteristic.On, this.activePreset.on);
+        this.activePreset = null;
+      } else{
+        this.platform.log.debug('Last active preset not set for controller %s', controller.name);
+      }
+
+      // switch to new preset and update state
+      const newPreset = this.presetList.find(obj => obj.id === this.wledClient.state.presetId.toString());
+      if (newPreset !== undefined){
+        newPreset.on = this.ledState.On;
+        this.platform.log.debug('Set On state for new preset %s (%s) of controller %s to: %s',
+          newPreset.id, newPreset.name, newPreset.controller.name, newPreset.on ? 'On' : 'Off');
+        newPreset.hapService.updateCharacteristic(this.platform.Characteristic.On, newPreset.on);
+
+        // set new preset as active preset
+        this.activePreset = newPreset;
+      } else{
+        if (this.wledClient.state.presetId.toString() === '-1'){
+          this.platform.log.debug('No preset selected by controller %s', controller.name);
+        } else{
+          this.platform.log.debug('Preset not configured for controller %s', controller.name);
+        }
+      }
+    }
+    this.ledState.PresetId = this.wledClient.state.presetId;
   }
 
   /**
    * Returns the preset state to Homekit
    */
   handleOnPresetGet(preset: WledControllerPreset, callback: CharacteristicGetCallback) {
-    this.platform.log.info('Controller %s getOn state for preset %s: %s', preset.controller.name, preset.name, preset.on ? 'ON' : 'OFF');
+    this.platform.log.debug('Get On state for preset %s (%s) of controller %s: %s',
+      preset.id, preset.name, preset.controller.name, preset.on ? 'On' : 'Off');
     callback(null, preset.on);
   }
 
@@ -335,14 +373,10 @@ export class WledWsPlatformAccessory {
    * Sets the preset state from Homekit
    */
   async handleOnPresetSet(preset: WledControllerPreset, value: CharacteristicValue, callback: CharacteristicSetCallback) {
-    this.platform.log.info('Controller %s setOn state for preset %s: %s', preset.controller.name, preset.name, value ? 'ON' : 'OFF');
+    this.platform.log.info('Set On state for preset %s (%s) of controller %s to: %s',
+      preset.id, preset.name, preset.controller.name, value ? 'On' : 'Off');
 
-    // switch off all other presets
-    for (const service of this.switchServices){
-      service.updateCharacteristic(this.platform.Characteristic.On, false);
-    }
-
-    // switch on new presets
+    // switch on new preset
     preset.on = <boolean>value;
     if (preset.on){
       this.wledClient.setPreset(preset.id);
@@ -364,18 +398,18 @@ export class WledWsPlatformAccessory {
     // check if presets are configured by user and create list of available presets on the controller
     if (controller.presets!==undefined){
       const configuredPresets: string[] = controller.presets.split(',');
-      const presetList : PresetElementDescription[] = [];
+      const presetElementList : PresetElementDescription[] = [];
       for (const key of Object.keys(this.wledClient.presets)) {
         if (Object.prototype.hasOwnProperty.call(this.wledClient.presets, key)) {
           if ((Object.prototype.hasOwnProperty.call(this.wledClient.presets[key], 'name'))){
-            presetList.push({id:key, name:this.wledClient.presets[key].name});
+            presetElementList.push({id:key, name:this.wledClient.presets[key].name});
             this.log.debug('Got preset %s from controller %s', this.wledClient.presets[key].name, controller.name);
           }
         }
       }
 
       const missingPresets = configuredPresets.filter(str =>
-        !presetList.some(obj => obj.name === str),
+        !presetElementList.some(obj => obj.name === str),
       );
 
       if (missingPresets.length>0){
@@ -383,7 +417,7 @@ export class WledWsPlatformAccessory {
       }
 
       // reduce list with presets to the user configured elements
-      const existingPresets = presetList.filter(obj=>configuredPresets.includes(obj.name));
+      const existingPresets = presetElementList.filter(obj=>configuredPresets.includes(obj.name));
       for (const preset of existingPresets) {
 
         // add a switch for each preset in Homekit
@@ -407,7 +441,10 @@ export class WledWsPlatformAccessory {
             this.handleOnPresetSet(wledControllerPreset, value, callback);
           });
 
-        this.switchServices.push(presetSwitchService);
+        // store them for later usage
+        this.presetList.push(wledControllerPreset);
+
+        //this.switchServices.push(presetSwitchService);
         this.log.debug('Added preset switch %s (id:%s) for controller %s', preset.name, preset.id, controller.name);
       }
 

@@ -1,11 +1,10 @@
-## 0.0.9 (2024-02-23)
+## 0.0.10-beta.0 (2024-02-25)
 
 ### Improvements
+- **General**: Improved log message output
 
-- **Features**: Added preset support 
-- **Features**: Added color support
-
-- **General**: Updated logging messages
+### Bugfixes
+- **Presets**: State is now reflected correctly in Homekit
 
 ### Known issues
 
