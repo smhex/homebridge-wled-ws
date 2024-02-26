@@ -2,7 +2,7 @@
   "private": false,
   "displayName": "Homebridge Wled Ws",
   "name": "homebridge-wled-ws",
-  "version": "0.0.10-beta.0",
+  "version": "0.0.10-beta.1",
   "description": "WLED strips plugin for Homebridge",
   "license": "Apache-2.0",
   "author": "smhex <smhex@mailbox.org>",
