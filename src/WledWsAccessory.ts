@@ -13,6 +13,7 @@ import Timeout = NodeJS.Timeout;
 interface PresetElementDescription{
   id : string;
   name : string;
+  isPlaylist : boolean;
 }
 
 /**
@@ -24,6 +25,7 @@ export class WledWsPlatformAccessory {
   private service : Service;
   private presetList : WledControllerPreset[] = [];
   private activePreset : WledControllerPreset | null = null;
+  private activePlaylist : WledControllerPreset | null = null;
   private wledClient;
   private connectionClosed = false;
   private connectionEstablished = false;
@@ -41,6 +43,7 @@ export class WledWsPlatformAccessory {
     Saturation : 0,
     Value : 0,
     PresetId : '-1',
+    PlaylistId : '-1',
   };
 
 
@@ -324,6 +327,7 @@ export class WledWsPlatformAccessory {
       this.service.updateCharacteristic(this.platform.Characteristic.Saturation, this.ledState.Saturation);
     }
 
+    // check for updated preset
     if (this.ledState.PresetId !== this.wledClient.state.presetId){
 
       this.platform.log.info('Controller %s updated current preset to: %s', controller.name, this.wledClient.state.presetId);
@@ -331,8 +335,9 @@ export class WledWsPlatformAccessory {
       // switch off active preset first
       if (this.activePreset!==null){
         this.activePreset.on = false;
-        this.platform.log.debug('Set On state for last active preset %s (%s) of controller %s to: %s',
-          this.activePreset.id, this.activePreset.name, this.activePreset.controller.name, this.activePreset.on ? 'On' : 'Off');
+        this.platform.log.info('Set On state for last active %s %s (%s) of controller %s to: %s',
+          this.activePreset.isPlaylist ? 'playlist' : 'preset', this.activePreset.id, this.activePreset.name,
+          this.activePreset.controller.name, this.activePreset.on ? 'On' : 'Off');
         this.activePreset.hapService.updateCharacteristic(this.platform.Characteristic.On, this.activePreset.on);
         this.activePreset = null;
       } else{
@@ -343,7 +348,7 @@ export class WledWsPlatformAccessory {
       const newPreset = this.presetList.find(obj => obj.id === this.wledClient.state.presetId.toString());
       if (newPreset !== undefined){
         newPreset.on = this.ledState.On;
-        this.platform.log.debug('Set On state for new preset %s (%s) of controller %s to: %s',
+        this.platform.log.info('Set On state for new %s %s (%s) of controller %s to: %s', newPreset.isPlaylist ? 'playlist' : 'preset',
           newPreset.id, newPreset.name, newPreset.controller.name, newPreset.on ? 'On' : 'Off');
         newPreset.hapService.updateCharacteristic(this.platform.Characteristic.On, newPreset.on);
 
@@ -358,14 +363,31 @@ export class WledWsPlatformAccessory {
       }
     }
     this.ledState.PresetId = this.wledClient.state.presetId;
+
+    // check for updated playlist
+    if (this.ledState.PlaylistId !== this.wledClient.state.playlistId){
+      if (this.wledClient.state.playlistId !== '-1'){
+        this.platform.log.info('Controller %s updated current playlist to: %s', controller.name, this.wledClient.state.playlistId);
+
+        // immediately switch off playlist
+        const newPlaylist = this.presetList.find(obj => obj.id === this.wledClient.state.playlistId.toString());
+        if (newPlaylist !== undefined){
+          newPlaylist.on = false;
+          this.platform.log.info('Set On state for new %s %s (%s) of controller %s to: %s', newPlaylist.isPlaylist ? 'playlist' : 'preset',
+            newPlaylist.id, newPlaylist.name, newPlaylist.controller.name, newPlaylist.on ? 'On' : 'Off');
+          newPlaylist.hapService.updateCharacteristic(this.platform.Characteristic.On, newPlaylist.on);
+        }
+      }
+      this.ledState.PlaylistId = this.wledClient.state.playlistId;
+    }
   }
 
   /**
    * Returns the preset state to Homekit
    */
   handleOnPresetGet(preset: WledControllerPreset, callback: CharacteristicGetCallback) {
-    this.platform.log.debug('Get On state for preset %s (%s) of controller %s: %s',
-      preset.id, preset.name, preset.controller.name, preset.on ? 'On' : 'Off');
+    this.platform.log.debug('Get On state for %s %s (%s) of controller %s: %s',
+      preset.isPlaylist ? 'playlist' : 'preset', preset.id, preset.name, preset.controller.name, preset.on ? 'On' : 'Off');
     callback(null, preset.on);
   }
 
@@ -373,8 +395,8 @@ export class WledWsPlatformAccessory {
    * Sets the preset state from Homekit
    */
   async handleOnPresetSet(preset: WledControllerPreset, value: CharacteristicValue, callback: CharacteristicSetCallback) {
-    this.platform.log.info('Set On state for preset %s (%s) of controller %s to: %s',
-      preset.id, preset.name, preset.controller.name, value ? 'On' : 'Off');
+    this.platform.log.info('Set On state for %s %s (%s) of controller %s to: %s',
+      preset.isPlaylist ? 'playlist' : 'preset', preset.id, preset.name, preset.controller.name, value ? 'On' : 'Off');
 
     // switch on new preset
     preset.on = <boolean>value;
@@ -402,8 +424,10 @@ export class WledWsPlatformAccessory {
       for (const key of Object.keys(this.wledClient.presets)) {
         if (Object.prototype.hasOwnProperty.call(this.wledClient.presets, key)) {
           if ((Object.prototype.hasOwnProperty.call(this.wledClient.presets[key], 'name'))){
-            presetElementList.push({id:key, name:this.wledClient.presets[key].name});
-            this.log.debug('Got preset %s from controller %s', this.wledClient.presets[key].name, controller.name);
+            const isPlaylist = !Object.prototype.hasOwnProperty.call(this.wledClient.presets[key], 'segments');
+            presetElementList.push({id:key, name:this.wledClient.presets[key].name, isPlaylist:isPlaylist});
+            this.log.debug('Got %s %s from controller %s', isPlaylist ? 'playlist' : 'preset',
+              this.wledClient.presets[key].name, controller.name);
           }
         }
       }
@@ -431,7 +455,7 @@ export class WledWsPlatformAccessory {
 
         // create a preset object for the callback handler
         const wledControllerPreset : WledControllerPreset = { name: preset.name, id: preset.id,
-          on:false, hapService: presetSwitchService, controller: controller};
+          on:false, hapService: presetSwitchService, controller: controller, isPlaylist: preset.isPlaylist};
 
         presetSwitchService.getCharacteristic(this.platform.Characteristic.On)
           .on('get', (callback) => {
@@ -445,7 +469,8 @@ export class WledWsPlatformAccessory {
         this.presetList.push(wledControllerPreset);
 
         //this.switchServices.push(presetSwitchService);
-        this.log.debug('Added preset switch %s (id:%s) for controller %s', preset.name, preset.id, controller.name);
+        this.log.debug('Added %s switch %s (id:%s) for controller %s', preset.isPlaylist ? 'playlist' : 'preset',
+          preset.name, preset.id, controller.name);
       }
 
       // Delete orphaned services which were created earlier and not needed anymore

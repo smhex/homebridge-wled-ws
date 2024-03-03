@@ -20,4 +20,5 @@ export interface WledControllerPreset {
     on: boolean;
     hapService: Service;
     controller: WledController;
+    isPlaylist : boolean;
 }

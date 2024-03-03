@@ -1,10 +1,9 @@
-## 0.0.10-beta.0 (2024-02-25)
+## 0.0.10-beta.1 (2024-03-03)
 
 ### Improvements
-- **General**: Improved log message output
 
 ### Bugfixes
-- **Presets**: State is now reflected correctly in Homekit
+- **Presets**: playlists containing presets are now handled correctly
 
 ### Known issues
 
