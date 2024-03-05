@@ -1,9 +1,10 @@
-## 0.0.10-beta.1 (2024-03-03)
+## 0.0.11 (2024-03-05)
 
-### Improvements
+### Features
+- **Paylists**: playlists are supported
 
 ### Bugfixes
-- **Presets**: playlists containing presets are now handled correctly
+- **Presets**: state changes of presets are now handled correctly
 
 ### Known issues
 
