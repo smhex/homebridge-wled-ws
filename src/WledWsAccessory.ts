@@ -580,7 +580,7 @@ export class WledWsPlatformAccessory {
    */
   updateAccessoryInformation(){
     const controller = <WledController>this.accessory.context.device;
-    this.log.debug(`Received info for controller %s (${JSON.stringify(this.wledClient)})`, controller.name);
+    this.log.info(`Received info for controller %s ${this.loggingEnabled?JSON.stringify(this.wledClient):''}`, controller.name);
     this.accessory.getService(this.platform.Service.AccessoryInformation)!
       .setCharacteristic(this.platform.Characteristic.Manufacturer, this.wledClient.info.brand)
       .setCharacteristic(this.platform.Characteristic.Model, this.wledClient.info.product)

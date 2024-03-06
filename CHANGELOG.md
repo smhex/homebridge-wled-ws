@@ -1,11 +1,10 @@
-## 0.0.11 (2024-03-05)
+## 0.0.12-beta.0 (2024-03-06)
 
 ### Features
-- **Paylists**: playlists are supported
 
 ### Bugfixes
-- **Presets**: state changes of presets are now handled correctly
 
 ### Known issues
+- **Github**: [Hoobs bridge constant reboot](https://github.com/smhex/homebridge-wled-ws/issues/39)
 
 
