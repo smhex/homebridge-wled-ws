@@ -11,4 +11,4 @@ updates:
     schedule:
       interval: "weekly"
     # Use this branch to test before merging into main
-    target-branch: "dependencies"
+    target-branch: "main"
