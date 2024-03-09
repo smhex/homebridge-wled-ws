@@ -1,4 +1,13 @@
-# homebridge-wled-ws
+<p align="center">
+
+<img src="https://github.com/homebridge/branding/blob/latest/logos/homebridge-color-round-stylized.png" width="150">
+<img src="https://github.com/Aircoookie/Akemi/blob/master/akemi/007_happy.png" width="150">
+
+</p>
+
+<span align="center">
+    
+# Homebridge WLED plugin
 
 [![npm](https://img.shields.io/npm/v/homebridge-wled-ws.svg?style=plastic)](https://www.npmjs.com/package/homebridge-wled-ws)
 [![npm](https://img.shields.io/npm/dt/homebridge-wled-ws.svg?style=plastic)](https://www.npmjs.com/package/homebridge-wled-ws)
@@ -6,7 +15,7 @@
 [![GitHub last commit](https://img.shields.io/github/last-commit/smhex/homebridge-wled-ws.svg?style=plastic)](https://github.com/smhex/homebridge-wled-ws)
 ![GitHub build](https://img.shields.io/github/actions/workflow/status/smhex/homebridge-wled-ws/build_package.yml?style=plastic)
 
-## Homebridge WLED plugin
+</span>
 
 This is a Homebridge dynamic platform plugin for controlling LED strips using Websockets. It is based on the fantastic [wled-client](https://github.com/ShiftLimits/wled-client) library, which provides access to WLED's JSON API using websockets.
 
