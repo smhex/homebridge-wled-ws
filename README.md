@@ -17,11 +17,10 @@
 
 </span>
 
-This is a Homebridge dynamic platform plugin for controlling LED strips using Websockets. It is based on the fantastic [wled-client](https://github.com/ShiftLimits/wled-client) library, which provides access to WLED's JSON API using websockets.
+This is a Homebridge dynamic platform plugin for controlling LED strips connected to a [WLED](https://github.com/Aircoookie/WLED) controller. It is based on the fantastic [wled-client](https://github.com/ShiftLimits/wled-client) library, which provides access to WLED's JSON API using websockets.
 
 
-> [!NOTE] 
-> Websockets are enabled by default since WLED version 0.10.2
+## Description
 
 The plugin adds a Lightbulb to Homekit for every configured WLED controller. The Lightbulb can be switched on and off and it's dimmable. Depending on the LED configuration additional services will be made available (e.g. color selection). For each configured preset a switch is created that can be used in for  automation. Unlike other plugins the preset selection is not implemented as a Homekit Television service.
 
