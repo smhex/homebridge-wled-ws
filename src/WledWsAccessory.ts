@@ -44,6 +44,7 @@ export class WledWsPlatformAccessory {
     Value : 0,
     PresetId : '-1',
     PlaylistId : '-1',
+    LightCapability : LightCapability.OnOff,
   };
 
 
@@ -256,6 +257,10 @@ export class WledWsPlatformAccessory {
       this.onConfigReceived();
     });
 
+    this.wledClient.on('update:info', () => {
+      this.onInfoReceived();
+    });
+
     this.wledClient.on('error', (error) => {
       this.onError(error);
     });
@@ -293,38 +298,36 @@ export class WledWsPlatformAccessory {
     const controller = <WledController>this.accessory.context.device;
     this.log.info(`Received controller %s state update ${this.loggingEnabled?JSON.stringify(this.wledClient.state):''}`, controller.name);
 
-    // initialize accessory information only once at startup
-    if (!this.init){
-      this.updateAccessoryInformation();
-      this.init = true;
-    }
-
     if (this.ledState.On !== this.wledClient.state.on){
       this.ledState.On = this.wledClient.state.on;
       this.platform.log.info('Controller %s updated current On state to: %s', controller.name, this.ledState.On);
       this.service.updateCharacteristic(this.platform.Characteristic.On, this.ledState.On);
     }
 
-    const brightness = Math.round(this.wledClient.state.brightness*100/255);
-    if (this.ledState.Brightness !== brightness){
-      this.ledState.Brightness = brightness;
-      this.platform.log.info('Controller %s updated current brightness to: %s', controller.name, this.ledState.Brightness);
-      this.service.updateCharacteristic(this.platform.Characteristic.Brightness, this.ledState.Brightness);
+    if (this.ledState.LightCapability!==LightCapability.OnOff){
+      const brightness = Math.round(this.wledClient.state.brightness*100/255);
+      if (this.ledState.Brightness !== brightness){
+        this.ledState.Brightness = brightness;
+        this.platform.log.info('Controller %s updated current brightness to: %s', controller.name, this.ledState.Brightness);
+        this.service.updateCharacteristic(this.platform.Characteristic.Brightness, this.ledState.Brightness);
+      }
     }
 
     // update current color settings (if changed outside Homekit)
-    const val = this.wledClient.state.segments[0].colors[0];
-    const { h, s, v } = rgbToHsv(val[0], val[1], val[2]);
-    if ((this.ledState.Hue!==h*360) || (this.ledState.Saturation!==s*100) || (this.ledState.Value!==v*100)){
-      this.platform.log.debug('Controller %s updated current color to: RGB %s:%s:%s -> HSV %s:%s:%s',
-        controller.name, val[0], val[1], val[2], h, s, v);
+    if ((this.ledState.LightCapability===LightCapability.RGB) || (this.ledState.LightCapability===LightCapability.RGBW)){
+      const val = this.wledClient.state.segments[0].colors[0];
+      const { h, s, v } = rgbToHsv(val[0], val[1], val[2]);
+      if ((this.ledState.Hue!==h*360) || (this.ledState.Saturation!==s*100) || (this.ledState.Value!==v*100)){
+        this.platform.log.debug('Controller %s updated current color to: RGB %s:%s:%s -> HSV %s:%s:%s',
+          controller.name, val[0], val[1], val[2], h, s, v);
 
-      // store new values and update Homekit
-      this.ledState.Hue = h*360;
-      this.ledState.Saturation = s*100;
-      this.ledState.Value = v*100;
-      this.service.updateCharacteristic(this.platform.Characteristic.Hue, this.ledState.Hue);
-      this.service.updateCharacteristic(this.platform.Characteristic.Saturation, this.ledState.Saturation);
+        // store new values and update Homekit
+        this.ledState.Hue = h*360;
+        this.ledState.Saturation = s*100;
+        this.ledState.Value = v*100;
+        this.service.updateCharacteristic(this.platform.Characteristic.Hue, this.ledState.Hue);
+        this.service.updateCharacteristic(this.platform.Characteristic.Saturation, this.ledState.Saturation);
+      }
     }
 
     // check for updated preset
@@ -506,6 +509,21 @@ export class WledWsPlatformAccessory {
   }
 
   /**
+   * Callback: each time controller's info changes this function is called. State info can
+   * triggered by user interaction or other clients
+   */
+  onInfoReceived(){
+    const controller = <WledController>this.accessory.context.device;
+    this.log.info(`Received ${!this.init?'initial ':''}info for controller %s`, controller.name);
+
+    // initialize accessory information only once at startup
+    if (!this.init){
+      this.updateAccessoryInformation();
+      this.init = true;
+    }
+  }
+
+  /**
    * Refresh presets to update preset information. This is done, when the controller is turned off
    * to avoid too much cpu load on the controller when the lights or effetcs are on. Presets can be
    * configured by the user or an API anytime - so we need to update this information regularly.
@@ -580,7 +598,9 @@ export class WledWsPlatformAccessory {
    */
   updateAccessoryInformation(){
     const controller = <WledController>this.accessory.context.device;
-    this.log.info(`Received info for controller %s ${this.loggingEnabled?JSON.stringify(this.wledClient):''}`, controller.name);
+    this.log.info('Update accessory info for controller %s to: brand=%s product=%s version=%s mac=%s lc=%s',
+      controller.name, this.wledClient.info.brand, this.wledClient.info.product, this.wledClient.info.version,
+      this.wledClient.info.mac, this.wledClient.info.leds.lightCapabilities);
     this.accessory.getService(this.platform.Service.AccessoryInformation)!
       .setCharacteristic(this.platform.Characteristic.Manufacturer, this.wledClient.info.brand)
       .setCharacteristic(this.platform.Characteristic.Model, this.wledClient.info.product)
@@ -622,6 +642,7 @@ export class WledWsPlatformAccessory {
         .onGet(this.getSaturation.bind(this))
         .onSet(this.setSaturation.bind(this));
     }
+    this.ledState.LightCapability = lc;
   }
 
 }

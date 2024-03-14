@@ -1,4 +1,8 @@
-## 0.0.12-beta.0 (2024-03-06)
+## 0.0.12-beta.1 (2024-03-14)
+
+### Improvements
+- **Logging**: Optimized log output
+- **Code**: Refactored light capability handling
 
 ### Features
 
