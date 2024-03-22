@@ -210,13 +210,47 @@ export class WledWsPlatformAccessory {
   }
 
   /**
-   * Retruns the saturation value to Homekit
+   * Returns the saturation value to Homekit
    */
   async getSaturation() : Promise<CharacteristicValue> {
     const saturation = this.ledState.Saturation;
     const controller = <WledController>this.accessory.context.device;
     this.platform.log.debug('Get controller %s saturation: %s', controller.name, saturation);
     return saturation;
+  }
+
+  /**
+   * Sets the preset state from Homekit
+   */
+  async setPreset(preset: WledControllerPreset, value: CharacteristicValue, callback: CharacteristicSetCallback) {
+
+    // only proceed if controller is connected
+    const controller = <WledController>this.accessory.context.device;
+    if (!this.connectionEstablished){
+      this.log.error('No connection to controller %s', controller.name);
+      throw new this.platform.api.hap.HapStatusError(this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
+    }
+
+    this.platform.log.info('Set On state for %s %s (%s) of controller %s to: %s',
+      preset.isPlaylist ? 'playlist' : 'preset', preset.id, preset.name, preset.controller.name, value ? 'On' : 'Off');
+
+    // switch on new preset
+    preset.on = <boolean>value;
+    if (preset.on){
+      this.wledClient.setPreset(preset.id);
+    } else{
+      this.wledClient.turnOff();
+    }
+    callback(null);
+  }
+
+  /**
+   * Returns the preset state to Homekit
+   */
+  getPreset(preset: WledControllerPreset, callback: CharacteristicGetCallback) {
+    this.platform.log.debug('Get On state for %s %s (%s) of controller %s: %s',
+      preset.isPlaylist ? 'playlist' : 'preset', preset.id, preset.name, preset.controller.name, preset.on ? 'On' : 'Off');
+    callback(null, preset.on);
   }
 
   /**
@@ -230,7 +264,19 @@ export class WledWsPlatformAccessory {
     const controller = <WledController>this.accessory.context.device;
     this.log.info(`${isReconnect?'Reconnecting':'Connecting'} to controller %s at address %s`, controller.name, controller.address);
 
-    this.wledClient = new WLEDClient(controller.address);
+    //this.wledClient = new WLEDClient(controller.address);
+    this.wledClient = new WLEDClient({
+      host:  controller.address,
+      websocket: {
+        reconnect : true,
+      },
+      immediate: true,
+      secure: false,
+      init : {
+        presets: true,
+        config: true,
+      },
+    });
 
     this.wledClient.on('open', () => {
       this.onConnected();
@@ -264,6 +310,7 @@ export class WledWsPlatformAccessory {
     this.wledClient.on('error', (error) => {
       this.onError(error);
     });
+
 
     try {
       await this.wledClient.init();
@@ -386,32 +433,6 @@ export class WledWsPlatformAccessory {
   }
 
   /**
-   * Returns the preset state to Homekit
-   */
-  handleOnPresetGet(preset: WledControllerPreset, callback: CharacteristicGetCallback) {
-    this.platform.log.debug('Get On state for %s %s (%s) of controller %s: %s',
-      preset.isPlaylist ? 'playlist' : 'preset', preset.id, preset.name, preset.controller.name, preset.on ? 'On' : 'Off');
-    callback(null, preset.on);
-  }
-
-  /**
-   * Sets the preset state from Homekit
-   */
-  async handleOnPresetSet(preset: WledControllerPreset, value: CharacteristicValue, callback: CharacteristicSetCallback) {
-    this.platform.log.info('Set On state for %s %s (%s) of controller %s to: %s',
-      preset.isPlaylist ? 'playlist' : 'preset', preset.id, preset.name, preset.controller.name, value ? 'On' : 'Off');
-
-    // switch on new preset
-    preset.on = <boolean>value;
-    if (preset.on){
-      this.wledClient.setPreset(preset.id);
-    } else{
-      this.wledClient.turnOff();
-    }
-    callback(null);
-  }
-
-  /**
    * Callback: each time controller's presets changes this function is called. Preset changes can
    * triggered by user interaction or other clients. This function checks, if the configured presets
    * are available on the controller. If not, a error message is logged to the console
@@ -462,10 +483,10 @@ export class WledWsPlatformAccessory {
 
         presetSwitchService.getCharacteristic(this.platform.Characteristic.On)
           .on('get', (callback) => {
-            this.handleOnPresetGet(wledControllerPreset, callback);
+            this.getPreset(wledControllerPreset, callback);
           })
           .on('set', (value, callback) => {
-            this.handleOnPresetSet(wledControllerPreset, value, callback);
+            this.setPreset(wledControllerPreset, value, callback);
           });
 
         // store them for later usage
@@ -539,7 +560,7 @@ export class WledWsPlatformAccessory {
    */
   refreshEffects(){
     const controller = <WledController>this.accessory.context.device;
-    this.log.info('Requesting effetcs for controller %s', controller.name);
+    this.log.info('Requesting effects for controller %s', controller.name);
     this.wledClient.refreshEffects();
   }
 
