@@ -66,9 +66,11 @@ Before starting the implementation of this plugin I intended to use WLED's MQTT 
 2. The brightness is set for the whole strip, brightness per segment is ignored
 
 
-## TODOs
-- ~~harden controller communication (reconnects)~~
-- ~~support color picker~~
-- ~~add presets and playlists~~
-- add effects
+## WLED Compatibility Notes
+
+| Firmware    | Tested                       | Comment |
+| :----------| :-------------------------- | :------ |
+| 0.14.1  |  ✅ |
+| 0.14.2  | 🔥 | The websocket interface is broken. Using this plugin will most likely trigger a reboot of your WLED, hence the connection will fail. |
+| 0.14.3  | 🔥 | The websocket interface is broken. Using this plugin will most likely trigger a reboot of your WLED, hence the connection will fail |
 
