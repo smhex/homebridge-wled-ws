@@ -5,6 +5,8 @@ export interface WledController{
     name : string;
     address : string;
     presets : string;
+    showRealTimeModeButton : boolean;
+    resetRealTimeModeAfterStream : boolean;
 }
 
 export enum LightCapability {

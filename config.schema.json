@@ -40,6 +40,18 @@
               "required": false,
               "pattern": "^([^,]+(?:,[^,]+)*)?$",
               "description": "Enter a list of comma separated presets"
+            },
+            "showRealTimeModeButton": {
+              "title": "Realtime Mode Button",
+              "type": "boolean",
+              "default": false,
+              "description": "If enabled an additional button will be added in homebridge."
+            },
+            "resetRealTimeModeAfterStream": {
+              "title": "Reset Realtime Mode After Stream",
+              "type": "boolean",
+              "default": true,
+              "description": "If enabled realtime mode will be enabled again, after the current session is closed."
             }
           }
         }
@@ -90,6 +102,14 @@
                 {
                   "key": "controllers[].presets",
                   "notitle": true
+                },
+                {
+                  "key": "controllers[].showRealTimeModeButton",
+                  "notitle": true
+                },
+                {
+                  "key": "controllers[].resetRealTimeModeAfterStream",
+                  "notitle": true
                 }
               ]
             }
@@ -97,7 +117,7 @@
         }
       ]
     },
-    
+
     {
       "type": "fieldset",
       "expandable": true,
