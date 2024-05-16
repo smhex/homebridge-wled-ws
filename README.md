@@ -39,7 +39,9 @@ Using Homebridge's integrated JSON Editor requires the following configuration e
         {
             "name": "My WLED Controller",
             "address": "192.168.1.100",
-            "presets": "DoorClosed,DoorOpen"
+            "presets": "DoorClosed,DoorOpen",
+            "showRealTimeModeButton": false,
+            "resetRealTimeModeAfterStream": true
         }
     ],
     "logging": false
@@ -47,12 +49,15 @@ Using Homebridge's integrated JSON Editor requires the following configuration e
 ```
 ### Settings
 
-| Setting    | Value                       | Comment |
-| :----------| :-------------------------- | :------ |
-| name       | Name of the WLED controller | This name is used for the acessory in Homekit and for the Homebridge logs |
-| address    | IP address or host name     | Enter the address of the controller - make sure it is the same which is shown as Client IP in the WLED Wifi settings |
-| presets    | list of presets     | Enter a comma separated list of presets. A switch will be created in Homekit for each preset |
-| logging    | True or False               | If enabled (=True) WLED's JSON data will be logged. Leave it disabled if everything works as expected. If you want to file an issue on Github turn it on for later analysis|
+| Setting    | Value                       | Comment                                                                                                                                                                                |
+| :----------| :-------------------------- |:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| name       | Name of the WLED controller | This name is used for the acessory in Homekit and for the Homebridge logs                                                                                                              |
+| address    | IP address or host name     | Enter the address of the controller - make sure it is the same which is shown as Client IP in the WLED Wifi settings                                                                   |
+| presets    | list of presets     | Enter a comma separated list of presets. A switch will be created in Homekit for each preset                                                                                           |
+| logging    | True or False               | If enabled (=True) WLED's JSON data will be logged. Leave it disabled if everything works as expected. If you want to file an issue on Github turn it on for later analysis            |
+| showRealTimeModeButton | True or False | If enabled (=True) a switch will be created in Homekit to enable/disable real-time mode. This is useful if you sometimes want to disable the real time mode.                           |
+| resetRealTimeModeAfterStream | True or False | If disabled (=True) the showRealTimeModeButton Switch controls the state of the realtime mode. If enabled realtime mode always turns back on, after finising a real time mode session. |
+
 
 > [!IMPORTANT] 
 > WLED organizes presets by id. This plugin uses names for configuration. When starting, it checks whether the name exists. If not, an error message is generated. In such a case please check the preset name for typos.
