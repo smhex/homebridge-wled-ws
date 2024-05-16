@@ -23,6 +23,7 @@ interface PresetElementDescription{
  */
 export class WledWsPlatformAccessory {
   private service : Service;
+  private realTimeService? : Service;
   private presetList : WledControllerPreset[] = [];
   private activePreset : WledControllerPreset | null = null;
   private activePlaylist : WledControllerPreset | null = null;
@@ -38,6 +39,7 @@ export class WledWsPlatformAccessory {
    */
   private ledState = {
     On: false,
+    Live: false,
     Brightness: 100,
     Hue : 0,
     Saturation : 0,
@@ -82,6 +84,26 @@ export class WledWsPlatformAccessory {
       .setCharacteristic(this.platform.Characteristic.Model, PLUGIN_NAME)
       .setCharacteristic(this.platform.Characteristic.FirmwareRevision, 'not set')
       .setCharacteristic(this.platform.Characteristic.SerialNumber, 'not set');
+
+
+    // check if real time mode button should be shown
+    const controller = <WledController>this.accessory.context.device;
+    if (controller.showRealTimeModeButton) {
+      // get switch service if it exists, otherwise create a new switch service
+      this.realTimeService = this.accessory.getService(this.platform.Service.Switch) ||
+        this.accessory.addService(this.platform.Service.Switch);
+
+      // name set to ambilight as most people are familiar with this term
+      this.realTimeService.setCharacteristic(this.platform.Characteristic.Name, 'Ambilight');
+
+      // register handlers for the On/Off Characteristic
+      this.realTimeService.getCharacteristic(this.platform.Characteristic.On)
+        .onSet(this.liveSetOn.bind(this))
+        .onGet(this.liveGetOn.bind(this));
+
+      // link service to main service
+      this.service.addLinkedService(this.realTimeService);
+    }
 
     // Connect the controller with Reconnect-Flag set to false
     this.connect(false);
@@ -128,6 +150,39 @@ export class WledWsPlatformAccessory {
     const controller = <WledController>this.accessory.context.device;
     this.platform.log.debug('Get controller %s On state: %s', controller.name, isOn ? 'On' : 'Off');
     return isOn;
+  }
+
+  /**
+   * Set if the real time mode is active. This is a separate switch in Homekit to enable/disable
+   */
+  async liveSetOn(value: CharacteristicValue){
+    // only proceed if controller is connected
+    const controller = <WledController>this.accessory.context.device;
+    if (!this.connectionEstablished){
+      this.log.error('No connection to controller %s', controller.name);
+      throw new this.platform.api.hap.HapStatusError(this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
+    }
+
+    this.ledState.Live = value as boolean;
+
+    this.platform.log.info('Set controller %s On state to: %s', controller.name, value ? 'On' : 'Off');
+    if (value) {
+      this.wledClient.allowLiveData();
+    } else{
+      this.platform.log.info('Resetting real time mode after stream for controller %s',
+        controller.resetRealTimeModeAfterStream ? 'true': 'false');
+      this.wledClient.ignoreLiveData(!controller.resetRealTimeModeAfterStream);
+    }
+  }
+
+  /**
+   * Returns the real time mode state to Homekit
+   */
+  async liveGetOn(): Promise<CharacteristicValue> {
+    const isLive = this.ledState.Live;
+    const controller = <WledController>this.accessory.context.device;
+    this.platform.log.debug('Get controller %s Live state: %s', controller.name, isLive ? 'On' : 'Off');
+    return isLive;
   }
 
   /**
@@ -349,6 +404,15 @@ export class WledWsPlatformAccessory {
       this.ledState.On = this.wledClient.state.on;
       this.platform.log.info('Controller %s updated current On state to: %s', controller.name, this.ledState.On);
       this.service.updateCharacteristic(this.platform.Characteristic.On, this.ledState.On);
+    }
+
+    // liveDataOverride === 0 means live mode is active
+    if(this.ledState.Live !== (this.wledClient.state.liveDataOverride === 0)){
+      this.ledState.Live = this.wledClient.state.liveDataOverride === 0;
+      this.platform.log.info('Controller %s updated current Live state to: %s', controller.name, this.ledState.Live);
+      if (this.realTimeService){
+        this.realTimeService.updateCharacteristic(this.platform.Characteristic.On, this.ledState.Live);
+      }
     }
 
     if (this.ledState.LightCapability!==LightCapability.OnOff){
