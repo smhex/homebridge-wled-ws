@@ -80,3 +80,6 @@ Before starting the implementation of this plugin I intended to use WLED's MQTT 
 | 0.14.2  | 🔥 | The websocket interface is broken. Using this plugin will most likely trigger a reboot of your WLED, hence the connection will fail. |
 | 0.14.3  | ✅ |  |
 
+## Thanks to the contributors
+
+- @LeLunZ for adding live mode support
