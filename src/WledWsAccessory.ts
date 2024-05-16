@@ -90,8 +90,8 @@ export class WledWsPlatformAccessory {
     const controller = <WledController>this.accessory.context.device;
     if (controller.showRealTimeModeButton) {
       // get switch service if it exists, otherwise create a new switch service
-      this.realTimeService = this.accessory.getService(this.platform.Service.Switch) ||
-        this.accessory.addService(this.platform.Service.Switch);
+      this.realTimeService = this.accessory.getServiceById(this.platform.Service.Switch, 'WLED-LIVE') ||
+        this.accessory.addService(this.platform.Service.Switch, 'Live Mode', 'WLED-LIVE');
 
       // name set to ambilight as most people are familiar with this term
       this.realTimeService.setCharacteristic(this.platform.Characteristic.Name, 'Ambilight');
@@ -535,7 +535,7 @@ export class WledWsPlatformAccessory {
         // add a switch for each preset in Homekit
         let presetSwitchService = this.accessory.getServiceById(this.platform.Service.Switch, 'WLED-PRESET-'+preset.id);
         if (presetSwitchService===undefined){
-          presetSwitchService = this.accessory.addService(this.platform.Service.Switch, preset.name, 'WLED-PRESET-'+preset.id);
+          presetSwitchService = this.accessory.addService(this.platform.Service.Switch, preset.name, 'WLED-P  RESET-'+preset.id);
           presetSwitchService.addOptionalCharacteristic(this.platform.Characteristic.ConfiguredName);
           presetSwitchService.setCharacteristic(this.platform.Characteristic.ConfiguredName, preset.name);
           this.service.addLinkedService(presetSwitchService);
