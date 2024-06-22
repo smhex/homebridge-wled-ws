@@ -6,6 +6,9 @@
   "description": "WLED strips plugin for Homebridge",
   "license": "Apache-2.0",
   "author": "smhex <smhex@mailbox.org>",
+  "maintainers": [
+    "smhex"
+  ],
   "keywords": [
     "homebridge-plugin",
     "homebridge-wled-ws",
