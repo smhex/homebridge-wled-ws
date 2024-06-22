@@ -535,7 +535,7 @@ export class WledWsPlatformAccessory {
         // add a switch for each preset in Homekit
         let presetSwitchService = this.accessory.getServiceById(this.platform.Service.Switch, 'WLED-PRESET-'+preset.id);
         if (presetSwitchService===undefined){
-          presetSwitchService = this.accessory.addService(this.platform.Service.Switch, preset.name, 'WLED-P  RESET-'+preset.id);
+          presetSwitchService = this.accessory.addService(this.platform.Service.Switch, preset.name, 'WLED-PRESET-'+preset.id);
           presetSwitchService.addOptionalCharacteristic(this.platform.Characteristic.ConfiguredName);
           presetSwitchService.setCharacteristic(this.platform.Characteristic.ConfiguredName, preset.name);
           this.service.addLinkedService(presetSwitchService);
