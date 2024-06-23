@@ -45,13 +45,13 @@
               "title": "Realtime Mode Button",
               "type": "boolean",
               "default": false,
-              "description": "If enabled an additional button will be added in homebridge."
+              "description": "If enabled, an additional button will be added in homebridge."
             },
             "resetRealTimeModeAfterStream": {
               "title": "Reset Realtime Mode After Stream",
               "type": "boolean",
               "default": true,
-              "description": "If enabled realtime mode will be enabled again, after the current session is closed."
+              "description": "If enabled, realtime mode will be enabled again, after the current session is closed."
             }
           }
         }
@@ -105,11 +105,11 @@
                 },
                 {
                   "key": "controllers[].showRealTimeModeButton",
-                  "notitle": true
+                  "notitle": false
                 },
                 {
                   "key": "controllers[].resetRealTimeModeAfterStream",
-                  "notitle": true
+                  "notitle": false
                 }
               ]
             }
