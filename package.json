@@ -23,12 +23,12 @@
     "url": "https://github.com/smhex/homebridge-wled-ws/issues"
   },
   "engines": {
-    "node": "^18.17.0 || ^20.9.0",
-    "homebridge": "^1.7.0"
+    "node": "^18.20.0 || ^20.9.0 || ^22.0.0",
+    "homebridge": "^1.8.0|| ^2.0.0-beta.0"
   },
   "main": "dist/index.js",
   "scripts": {
-    "lint": "eslint src/**.ts --max-warnings=0",
+    "lint": "eslint eslint.config.mjs 'src/**/*.ts' --max-warnings=0",
     "watch": "npm run build && npm link && nodemon",
     "build": "rimraf ./dist && tsc",
     "prepublishOnly": "npm run lint && npm run build"
@@ -40,14 +40,18 @@
     "@smhex:registry": "https://npm.pkg.github.com"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.2.0",
+    "@eslint/js": "^9.18.0",
     "@types/node": "^22.0.0",
-    "@typescript-eslint/eslint-plugin": "^8.0.0",
-    "@typescript-eslint/parser": "^8.0.0",
-    "eslint": "^8.45.0",
+    "@typescript-eslint/eslint-plugin": "^8.20.0",
+    "@typescript-eslint/parser": "^8.20.0",
+    "eslint": "^9.18.0",
     "homebridge": "^1.7.0",
     "nodemon": "^3.0.3",
     "rimraf": "^6.0.1",
     "ts-node": "^10.9.1",
-    "typescript": "^5.3.3"
+    "type-fest": "^4.32.0",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.20.0"
   }
 }
