@@ -1,4 +1,12 @@
-import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic } from 'homebridge';
+import {
+  API,
+  DynamicPlatformPlugin,
+  Logger,
+  PlatformAccessory,
+  PlatformConfig,
+  Service,
+  Characteristic,
+} from 'homebridge';
 
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
 import { WledWsPlatformAccessory } from './WledWsAccessory';
@@ -11,7 +19,8 @@ import { WledController } from './WledController';
  */
 export class WledWsHomebridgePlatform implements DynamicPlatformPlugin {
   public readonly Service: typeof Service = this.api.hap.Service;
-  public readonly Characteristic: typeof Characteristic = this.api.hap.Characteristic;
+  public readonly Characteristic: typeof Characteristic =
+    this.api.hap.Characteristic;
 
   // this is used to track restored cached accessories
   public readonly accessories: PlatformAccessory[] = [];
@@ -25,10 +34,9 @@ export class WledWsHomebridgePlatform implements DynamicPlatformPlugin {
     public readonly config: PlatformConfig,
     public readonly api: API,
   ) {
-
     // Check if at least one controller is configured using plugin settings or config.json
     // For the "homebridge verified" badge we must not continue if the configuration is missing
-    if (!this.config.controllers){
+    if (!this.config.controllers) {
       log.error('Please configure at least one controller');
       return;
     }
@@ -68,7 +76,6 @@ export class WledWsHomebridgePlatform implements DynamicPlatformPlugin {
    * must not be registered again to prevent "duplicate UUID" errors.
    */
   discoverDevices() {
-
     // Get configured controllers from config and create corresponding accessories
     // In case of configuration changes, the following scheme will apply:
     // Configured, but not cached -> Add
@@ -76,25 +83,39 @@ export class WledWsHomebridgePlatform implements DynamicPlatformPlugin {
     // Not configured, but cached -> Remove
     for (const id in this.config.controllers) {
       const controller = <WledController>this.config.controllers[id];
-      this.log.info('Loading configuration for controller %s at address %s', controller.name, controller.address);
+      this.log.info(
+        'Loading configuration for controller %s at address %s',
+        controller.name,
+        controller.address,
+      );
 
       // generate a unique id for the accessory genrated from address and check
       // if another controller is already registered under the same address
       const uuid = this.api.hap.uuid.generate(controller.address);
       if (this.controllerMap.has(controller.address)) {
-        const existingController = <WledController>this.controllerMap.get(controller.address);
-        this.log.error('Controller %s is already configured at address %s', existingController.name, controller.address);
-      } else{
+        const existingController = <WledController>(
+          this.controllerMap.get(controller.address)
+        );
+        this.log.error(
+          'Controller %s is already configured at address %s',
+          existingController.name,
+          controller.address,
+        );
+      } else {
         this.controllerMap.set(controller.address, controller);
-
 
         // see if an accessory with the same uuid has already been registered and restored from
         // the cached devices we stored in the `configureAccessory` method above
-        const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
+        const existingAccessory = this.accessories.find(
+          (accessory) => accessory.UUID === uuid,
+        );
 
         if (existingAccessory) {
-        // the accessory already exists
-          this.log.info('Restoring existing accessory from cache:', existingAccessory.displayName);
+          // the accessory already exists
+          this.log.info(
+            'Restoring existing accessory from cache:',
+            existingAccessory.displayName,
+          );
 
           // always update the accessory.context
           existingAccessory.context.device = controller;
@@ -102,18 +123,29 @@ export class WledWsHomebridgePlatform implements DynamicPlatformPlugin {
 
           // create the accessory handler for the restored accessory
           // this is imported from `platformAccessory.ts`
-          this.accessoryMap.set(uuid, new WledWsPlatformAccessory(this, this.log, existingAccessory, this.config.logging));
+          this.accessoryMap.set(
+            uuid,
+            new WledWsPlatformAccessory(
+              this,
+              this.log,
+              existingAccessory,
+              this.config.logging,
+            ),
+          );
 
-        // it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, eg.:
-        // remove platform accessories when no longer present
-        // this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [existingAccessory]);
-        // this.log.info('Removing existing accessory from cache:', existingAccessory.displayName);
+          // it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, eg.:
+          // remove platform accessories when no longer present
+          // this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [existingAccessory]);
+          // this.log.info('Removing existing accessory from cache:', existingAccessory.displayName);
         } else {
-        // the accessory does not yet exist, so we need to create it
+          // the accessory does not yet exist, so we need to create it
           this.log.info('Adding new accessory:', controller.name);
 
           // create a new accessory
-          const accessory = new this.api.platformAccessory(controller.name, uuid);
+          const accessory = new this.api.platformAccessory(
+            controller.name,
+            uuid,
+          );
 
           // store a copy of the device object in the `accessory.context`
           // the `context` property can be used to store any data about the accessory you may need
@@ -121,10 +153,20 @@ export class WledWsHomebridgePlatform implements DynamicPlatformPlugin {
 
           // create the accessory handler for the newly create accessory
           // this is imported from `platformAccessory.ts`
-          this.accessoryMap.set(uuid, new WledWsPlatformAccessory(this, this.log, accessory, this.config.logging));
+          this.accessoryMap.set(
+            uuid,
+            new WledWsPlatformAccessory(
+              this,
+              this.log,
+              accessory,
+              this.config.logging,
+            ),
+          );
 
           // link the accessory to your platform
-          this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+          this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [
+            accessory,
+          ]);
         }
       }
     }
@@ -133,13 +175,20 @@ export class WledWsHomebridgePlatform implements DynamicPlatformPlugin {
     const accessoriesToBeRemoved: PlatformAccessory[] = [];
     for (const cachedAccessory of this.accessories) {
       if (!this.controllerMap.has(cachedAccessory.context.device.address)) {
-        this.log.info('Removing accessory %s', cachedAccessory.context.device.name);
+        this.log.info(
+          'Removing accessory %s',
+          cachedAccessory.context.device.name,
+        );
         accessoriesToBeRemoved.push(cachedAccessory);
       }
     }
 
     if (accessoriesToBeRemoved.length > 0) {
-      this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, accessoriesToBeRemoved);
+      this.api.unregisterPlatformAccessories(
+        PLUGIN_NAME,
+        PLATFORM_NAME,
+        accessoriesToBeRemoved,
+      );
     }
   }
 
@@ -152,6 +201,4 @@ export class WledWsHomebridgePlatform implements DynamicPlatformPlugin {
       accessory.disconnect();
     }
   }
-
 }
-
