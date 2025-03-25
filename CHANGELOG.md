@@ -1,10 +1,14 @@
-## 0.0.16 (2024-06-22)
+## 0.0.17-beta.0 (2025-xx-xx)
 
 ### Features
 
 ### Improvements
+- **Node**: updated several dependencies
+- **WLED**: adeed support of WLED firmware version 0.15.0
+- **Homebridge**: added support for Homebridge 2.0 
+- **Code**: Cleanup for better readability
 
 ### Bugfixes
-- **Github**: [Check that pkg.maintainers is defined before checking it's length](https://github.com/homebridge/homebridge-config-ui-x/pull/2069)
+
 
 ### Known issues

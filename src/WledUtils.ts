@@ -5,7 +5,11 @@
  * @param b BLUE color 0..255
  * @returns [H, S, V]
  */
-export function rgbToHsv(r: number, g: number, b: number): { h: number; s: number; v: number } {
+export function rgbToHsv(
+  r: number,
+  g: number,
+  b: number,
+): { h: number; s: number; v: number } {
   // Normalize RGB values to be in the range [0, 1]
   const normalizedR = r / 255;
   const normalizedG = g / 255;
@@ -19,7 +23,7 @@ export function rgbToHsv(r: number, g: number, b: number): { h: number; s: numbe
   const v = max;
 
   // Calculate the saturation (S)
-  const s = (max === 0) ? 0 : (max - min) / max;
+  const s = max === 0 ? 0 : (max - min) / max;
 
   // Calculate the hue (H)
   let h = 0;
@@ -30,7 +34,9 @@ export function rgbToHsv(r: number, g: number, b: number): { h: number; s: numbe
   } else {
     const delta = max - min;
     if (max === normalizedR) {
-      h = (normalizedG - normalizedB) / delta + ((normalizedG < normalizedB) ? 6 : 0);
+      h =
+        (normalizedG - normalizedB) / delta +
+        (normalizedG < normalizedB ? 6 : 0);
     } else if (max === normalizedG) {
       h = (normalizedB - normalizedR) / delta + 2;
     } else {
@@ -51,9 +57,13 @@ export function rgbToHsv(r: number, g: number, b: number): { h: number; s: numbe
  * @param v (V)alue
  * @returns [R,G,B] Color 0..255
  */
-export function hsvToRgb(h: number, s: number, v: number): { r: number; g: number; b: number } {
+export function hsvToRgb(
+  h: number,
+  s: number,
+  v: number,
+): { r: number; g: number; b: number } {
   // Ensure H, S, and V are within valid ranges
-  const hue = (h >= 0 && h <= 1) ? h : h % 1;
+  const hue = h >= 0 && h <= 1 ? h : h % 1;
   const saturation = Math.max(0, Math.min(1, s));
   const value = Math.max(0, Math.min(1, v));
 
