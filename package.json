@@ -28,11 +28,11 @@
   },
   "main": "dist/index.js",
   "scripts": {
-    "lint:check": "eslint eslint.config.mjs src/**/*.ts",
+    "lint": "eslint eslint.config.mjs src/**/*.ts",
     "lint:fix": "eslint eslint.config.mjs src/**/*.ts --fix --max-warnings=0",
     "watch": "npm run build && npm link && nodemon",
     "build": "rimraf ./dist && tsc",
-    "prepublishOnly": "npm run lint:fix && npm run build"
+    "prepublishOnly": "npm run lint && npm run build"
   },
   "dependencies": {
     "wled-client": "^0.22.1"

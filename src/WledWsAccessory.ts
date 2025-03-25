@@ -979,6 +979,7 @@ export class WledWsPlatformAccessory {
         this.platform.Characteristic.SerialNumber,
         this.wledClient.info.mac,
       );
+      
     if (!this.wledClient.info.leds.hasOwnProperty('lightCapabilities')) {
         this.wledClient.info.leds.segmentLightCapabilities = [1];
         this.wledClient.info.leds.lightCapabilities = 1;
