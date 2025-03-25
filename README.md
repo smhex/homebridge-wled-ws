@@ -76,6 +76,7 @@ Before starting the implementation of this plugin I intended to use WLED's MQTT 
 
 | Firmware    | Tested                       | Comment |
 | :----------| :-------------------------- | :------ |
+| 0.13.x  |  ✅ |
 | 0.14.1  |  ✅ |
 | 0.14.2  | 🔥 | The WLED websocket interface is broken. Using this plugin will most likely trigger a reboot of your controller, hence the connection will fail. |
 | 0.14.3  | ✅ |  |
