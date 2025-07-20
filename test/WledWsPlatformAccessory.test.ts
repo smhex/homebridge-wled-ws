@@ -1,11 +1,11 @@
-// Mock the wled-client module
 jest.mock('wled-client');
 
 import { WledWsPlatformAccessory } from '../src/WledWsPlatformAccessory';
-import { LightCapability } from '../src/WledController';
-import { PlatformAccessory } from 'homebridge';
+import { LightCapability, WledControllerPreset } from '../src/WledController';
 
 // Mock-Objekte für Abhängigkeiten
+const mockLogger = { info: jest.fn(), error: jest.fn(), debug: jest.fn() };
+
 const mockService = {
   getCharacteristic: jest.fn().mockReturnThis(),
   onSet: jest.fn().mockReturnThis(),
@@ -18,10 +18,10 @@ const mockService = {
   addOptionalCharacteristic: jest.fn(),
 };
 
-const mockAccessory: Partial<PlatformAccessory> =  {
+const mockAccessory =  {
   getService: jest.fn().mockReturnValue(mockService),
   addService: jest.fn().mockReturnValue(mockService),
-  getServiceById: jest.fn().mockReturnValue(mockService),
+  getServiceById: jest.fn().mockReturnValue(undefined),
   removeService: jest.fn(),
   context: {
     device: {
@@ -29,10 +29,20 @@ const mockAccessory: Partial<PlatformAccessory> =  {
       address: '127.0.0.1',
       showRealTimeModeButton: false,
       presets: 'Preset1,Preset2',
+      resetRealTimeModeAfterStream: false // für liveSetOn-Test
     },
   },
   displayName: 'TestDevice',
   UUID: 'test-uuid',
+    ledState: {
+    On: false,
+    Live: false,
+    Brightness: 0,
+    Hue: 0,
+    Saturation: 0,
+    PresetId: '',
+    LightCapability: LightCapability.OnOff,
+  },
 };
 
 const mockPlatform = {
@@ -53,7 +63,7 @@ const mockPlatform = {
     SerialNumber: 'SerialNumber',
     ConfiguredName: 'ConfiguredName',
   },
-  log: { info: jest.fn(), error: jest.fn(), debug: jest.fn() },
+  log: mockLogger, 
   api: {
     hap: {
       HapStatusError: Error,
@@ -61,8 +71,6 @@ const mockPlatform = {
     },
   },
 };
-
-const mockLogger = { info: jest.fn(), error: jest.fn(), debug: jest.fn() };
 
 const mockWledClient = {
   turnOn: jest.fn(),
@@ -97,82 +105,103 @@ const mockWledClient = {
   },
 };
 
+let instance: WledWsPlatformAccessory;
+
 describe('WledWsPlatformAccessory', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
-    // setServiceById für RealTimeMode
     mockAccessory.getServiceById = jest.fn().mockReturnValue(undefined);
+    if (mockAccessory.context && mockAccessory.context.device) {
+      mockAccessory.context.device.resetRealTimeModeAfterStream = false;
+    }
+    instance = new WledWsPlatformAccessory(
+      mockPlatform as any,
+      mockLogger as any,
+      mockAccessory as any,
+      true
+    );
+    instance['connectionEstablished'] = true;
+    await instance.connect(false); 
+    instance['wledClient'] = mockWledClient;
+    instance['connectionEstablished'] = true;
   });
 
   it('should instantiate without errors', () => {
-
-      // Prüfe, ob die Methoden im Mock vorhanden sind
-    expect(typeof mockAccessory.getService).toBe('function');
-    expect(typeof mockAccessory.addService).toBe('function');
-    expect(typeof mockService.setCharacteristic).toBe('function');
-
-    const instance = new WledWsPlatformAccessory(
-      mockPlatform as any,
-      mockLogger as any,
-      mockAccessory as any,
-      true
-    );
-    // wledClient wird im Konstruktor gesetzt, hier mocken
-    instance['wledClient'] = mockWledClient;
     expect(instance).toBeDefined();
   });
 
-  it('should throw error if controller is not connected on setOn', async () => {
-    const instance = new WledWsPlatformAccessory(
-      mockPlatform as any,
-      mockLogger as any,
-      mockAccessory as any,
-      true
+  it('should log info when connect is called', async () => {
+    expect(mockLogger.info).toHaveBeenCalledWith(
+      'Connecting to controller %s at address %s',
+      mockAccessory.context.device.name,
+      mockAccessory.context.device.address
     );
+  });
+
+  it('should throw error if controller is not connected on setOn', async () => {
     instance['connectionEstablished'] = false;
-    instance['wledClient'] = mockWledClient;
     await expect(instance.setOn(true)).rejects.toThrow(Error);
     expect(mockLogger.error).toHaveBeenCalled();
   });
 
   it('should call turnOn on wledClient when setOn(true)', async () => {
-    const instance = new WledWsPlatformAccessory(
-      mockPlatform as any,
-      mockLogger as any,
-      mockAccessory as any,
-      true
-    );
-    instance['connectionEstablished'] = true;
-    instance['wledClient'] = mockWledClient;
     await instance.setOn(true);
     expect(mockWledClient.turnOn).toHaveBeenCalled();
   });
 
   it('should call turnOff on wledClient when setOn(false)', async () => {
-    const instance = new WledWsPlatformAccessory(
-      mockPlatform as any,
-      mockLogger as any,
-      mockAccessory as any,
-      true
-    );
-    instance['connectionEstablished'] = true;
-    instance['wledClient'] = mockWledClient;
     await instance.setOn(false);
     expect(mockWledClient.turnOff).toHaveBeenCalled();
   });
 
   it('should return ledState.On on getOn', async () => {
-    const instance = new WledWsPlatformAccessory(
-      mockPlatform as any,
-      mockLogger as any,
-      mockAccessory as any,
-      true
-    );
     instance['ledState'].On = true;
-    instance['wledClient'] = mockWledClient;
     const result = await instance.getOn();
     expect(result).toBe(true);
   });
 
-  // Weitere Tests für liveSetOn, setBrightness, setHue, setSaturation etc. können analog ergänzt werden.
+  it('should call allowLiveData on wledClient when liveSetOn(true)', async () => {
+    await instance.liveSetOn(true);
+    expect(mockWledClient.allowLiveData).toHaveBeenCalled();
+    expect(mockLogger.info).toHaveBeenCalledWith(
+      'Set controller %s On state to: %s',
+      mockAccessory.context.device.name,
+      'On'
+    );
+  });
+
+  it('should call ignoreLiveData on wledClient when liveSetOn(false)', async () => {
+    mockAccessory.context.device.resetRealTimeModeAfterStream = true;
+    await instance.liveSetOn(false);
+    expect(mockWledClient.ignoreLiveData).toHaveBeenCalledWith(false);
+    expect(mockLogger.info).toHaveBeenCalledWith(
+      'Resetting real time mode after stream for controller %s',
+      'true'
+    );
+  });
+
+  it('should update ledState and log info when onStateReceived is called', () => {
+    // Vorbereiten: z.B. LED-Status im Mock setzen
+    mockWledClient.state.on = true;
+    mockWledClient.state.liveDataOverride = 0;
+    mockWledClient.state.brightness = 128;
+    mockWledClient.state.segments = [{ colors: [ [255, 0, 0] ] }];
+    mockWledClient.state.presetId = '5';
+    mockWledClient.state.playlistId = '-1';
+
+    // ggf. LightCapability setzen
+    instance['ledState'].LightCapability = LightCapability.RGB;
+
+    // Handler aufrufen
+    instance.onStateReceived();
+
+    // Erwartete Änderungen prüfen
+    expect(instance['ledState'].On).toBe(true);
+    expect(instance['ledState'].Live).toBe(true);
+    expect(instance['ledState'].Brightness).toBe(Math.round((128 * 100) / 255));
+    expect(instance['ledState'].Hue).toBe(0); // RGB (255,0,0) -> Hue 0°
+    expect(instance['ledState'].Saturation).toBe(100); // RGB (255,0,0) -> Sättigung 100%
+    expect(instance['ledState'].PresetId).toBe('5');
+    expect(mockLogger.info).toHaveBeenCalled(); // Logger wurde genutzt
+});
 });

@@ -1,12 +1,13 @@
 import { WledWsHomebridgePlatform } from '../src/WledWsHomebridgePlatform';
 
-// Mocks für Homebridge-Abhängigkeiten
+// Mock für das Homebridge-Log-Objekt
 const mockLog = {
   info: jest.fn(),
   error: jest.fn(),
   debug: jest.fn(),
 };
 
+// Mock für einen Service
 const mockService = {
   getCharacteristic: jest.fn().mockReturnThis(),
   onSet: jest.fn().mockReturnThis(),
@@ -18,8 +19,9 @@ const mockService = {
   removeLinkedService: jest.fn(),
 };
 
+// Mock für ein PlatformAccessory
 const mockPlatformAccessory = {
-  getService: jest.fn().mockReturnValue(mockService), 
+  getService: jest.fn().mockReturnValue(mockService),
   addService: jest.fn().mockReturnValue(mockService),
   getServiceById: jest.fn().mockReturnValue(mockService),
   removeService: jest.fn(),
@@ -28,6 +30,7 @@ const mockPlatformAccessory = {
   UUID: 'test-uuid',
 };
 
+// Mock für die Homebridge-API
 const mockApi = {
   hap: {
     Service: {},
@@ -55,6 +58,7 @@ const mockApi = {
   }),
 };
 
+// Beispiel-Konfiguration
 const mockConfig = {
   name: 'TestPlatform',
   logging: true,
@@ -108,7 +112,6 @@ describe('WledWsHomebridgePlatform', () => {
     expect(mockAccessory.disconnect).toHaveBeenCalledTimes(2);
   });
 
-  // Zusätzlicher Test: Prüfe, ob das Mock-Accessory die Methoden hat
   it('mockPlatformAccessory should provide required methods', () => {
     const accessory = mockApi.platformAccessory('TestDevice', 'test-uuid');
     expect(typeof accessory.getService).toBe('function');
