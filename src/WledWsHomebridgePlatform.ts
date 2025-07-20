@@ -9,7 +9,7 @@ import {
 } from 'homebridge';
 
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
-import { WledWsPlatformAccessory } from './WledWsAccessory';
+import { WledWsPlatformAccessory } from './WledWsPlatformAccessory';
 import { WledController } from './WledController';
 
 /**

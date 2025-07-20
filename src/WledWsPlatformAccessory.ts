@@ -5,7 +5,7 @@ import {
   CharacteristicGetCallback,
   CharacteristicSetCallback,
 } from 'homebridge';
-import { WledWsHomebridgePlatform } from './WledWsPlatform';
+import { WledWsHomebridgePlatform } from './WledWsHomebridgePlatform';
 import {
   WledController,
   LightCapability,
