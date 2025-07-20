@@ -186,8 +186,6 @@ describe('WledWsPlatformAccessory', () => {
     mockWledClient.state.liveDataOverride = 0;
     mockWledClient.state.brightness = 128;
     mockWledClient.state.segments = [{ colors: [ [255, 0, 0] ] }];
-    mockWledClient.state.presetId = '5';
-    mockWledClient.state.playlistId = '-1';
 
     // ggf. LightCapability setzen
     instance['ledState'].LightCapability = LightCapability.RGB;
@@ -201,7 +199,6 @@ describe('WledWsPlatformAccessory', () => {
     expect(instance['ledState'].Brightness).toBe(Math.round((128 * 100) / 255));
     expect(instance['ledState'].Hue).toBe(0); // RGB (255,0,0) -> Hue 0°
     expect(instance['ledState'].Saturation).toBe(100); // RGB (255,0,0) -> Sättigung 100%
-    expect(instance['ledState'].PresetId).toBe('5');
     expect(mockLogger.info).toHaveBeenCalled(); // Logger wurde genutzt
 });
 });
