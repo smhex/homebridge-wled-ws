@@ -1,7 +1,7 @@
 import { API } from 'homebridge';
 
 import { PLATFORM_NAME } from './settings';
-import { WledWsHomebridgePlatform } from './WledWsPlatform';
+import { WledWsHomebridgePlatform } from './WledWsHomebridgePlatform';
 
 /**
  * This method registers the platform with Homebridge
