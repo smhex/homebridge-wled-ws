@@ -148,7 +148,7 @@ export class WledWsPlatformAccessory {
     // only proceed if controller is connected
     const controller = <WledController>this.accessory.context.device;
     if (!this.connectionEstablished) {
-      this.log.error('No connection to controller %s', controller.name);
+      this.platform.log.error('No connection to controller %s', controller.name);
       throw new this.platform.api.hap.HapStatusError(
         this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE,
       );
@@ -199,7 +199,7 @@ export class WledWsPlatformAccessory {
     // only proceed if controller is connected
     const controller = <WledController>this.accessory.context.device;
     if (!this.connectionEstablished) {
-      this.log.error('No connection to controller %s', controller.name);
+      this.platform.log.error('No connection to controller %s', controller.name);
       throw new this.platform.api.hap.HapStatusError(
         this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE,
       );
@@ -245,7 +245,7 @@ export class WledWsPlatformAccessory {
     // only proceed if controller is connected
     const controller = <WledController>this.accessory.context.device;
     if (!this.connectionEstablished) {
-      this.log.error('No connection to controller %s', controller.name);
+      this.platform.log.error('No connection to controller %s', controller.name);
       throw new this.platform.api.hap.HapStatusError(
         this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE,
       );
@@ -285,7 +285,7 @@ export class WledWsPlatformAccessory {
     // only proceed if controller is connected
     const controller = <WledController>this.accessory.context.device;
     if (!this.connectionEstablished) {
-      this.log.error('No connection to controller %s', controller.name);
+      this.platform.log.error('No connection to controller %s', controller.name);
       throw new this.platform.api.hap.HapStatusError(
         this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE,
       );
@@ -324,7 +324,7 @@ export class WledWsPlatformAccessory {
     // only proceed if controller is connected
     const controller = <WledController>this.accessory.context.device;
     if (!this.connectionEstablished) {
-      this.log.error('No connection to controller %s', controller.name);
+      this.platform.log.error('No connection to controller %s', controller.name);
       throw new this.platform.api.hap.HapStatusError(
         this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE,
       );
@@ -369,7 +369,7 @@ export class WledWsPlatformAccessory {
     // only proceed if controller is connected
     const controller = <WledController>this.accessory.context.device;
     if (!this.connectionEstablished) {
-      this.log.error('No connection to controller %s', controller.name);
+      this.platform.log.error('No connection to controller %s', controller.name);
       throw new this.platform.api.hap.HapStatusError(
         this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE,
       );
@@ -417,7 +417,7 @@ export class WledWsPlatformAccessory {
     this.connectionClosed = false;
 
     const controller = <WledController>this.accessory.context.device;
-    this.log.info(
+    this.platform.log.info(
       `${isReconnect ? 'Reconnecting' : 'Connecting'} to controller %s at address %s`,
       controller.name,
       controller.address,
@@ -473,7 +473,7 @@ export class WledWsPlatformAccessory {
     try {
       await this.wledClient.init();
     } catch {
-      this.log.error(
+      this.platform.log.error(
         'Error connecting controller %s at address %s',
         controller.name,
         controller.address,
@@ -488,7 +488,7 @@ export class WledWsPlatformAccessory {
   disconnect() {
     if (!this.connectionClosed) {
       const controller = <WledController>this.accessory.context.device;
-      this.log.info('Disconnecting controller %s', controller.name);
+      this.platform.log.info('Disconnecting controller %s', controller.name);
 
       if (this.reconnectIntervalId !== null) {
         clearTimeout(this.reconnectIntervalId);
@@ -505,7 +505,7 @@ export class WledWsPlatformAccessory {
    */
   onStateReceived() {
     const controller = <WledController>this.accessory.context.device;
-    this.log.info(
+    this.platform.log.info(
       `Received controller %s state update ${this.loggingEnabled ? JSON.stringify(this.wledClient.state) : ''}`,
       controller.name,
     );
@@ -703,7 +703,7 @@ export class WledWsPlatformAccessory {
    */
   onPresetsReceived() {
     const controller = <WledController>this.accessory.context.device;
-    this.log.info(
+    this.platform.log.info(
       `Received presets for controller %s ${this.loggingEnabled ? JSON.stringify(this.wledClient.presets) : ''}`,
       controller.name,
     );
@@ -731,7 +731,7 @@ export class WledWsPlatformAccessory {
               name: this.wledClient.presets[key].name,
               isPlaylist: isPlaylist,
             });
-            this.log.debug(
+            this.platform.log.debug(
               'Got %s %s from controller %s',
               isPlaylist ? 'playlist' : 'preset',
               this.wledClient.presets[key].name,
@@ -746,7 +746,7 @@ export class WledWsPlatformAccessory {
       );
 
       if (missingPresets.length > 0) {
-        this.log.error(
+        this.platform.log.error(
           'Configured preset(s) %s not supported by controller %s',
           missingPresets,
           controller.name,
@@ -802,7 +802,7 @@ export class WledWsPlatformAccessory {
         this.presetList.push(wledControllerPreset);
 
         //this.switchServices.push(presetSwitchService);
-        this.log.debug(
+        this.platform.log.debug(
           'Added %s switch %s (id:%s) for controller %s',
           preset.isPlaylist ? 'playlist' : 'preset',
           preset.name,
@@ -819,7 +819,7 @@ export class WledWsPlatformAccessory {
         );
         if (cachedService) {
           if (!existingPresets.some((obj) => obj.id === i.toString())) {
-            this.log.debug(
+            this.platform.log.debug(
               'Remove cached preset switch with id %s for controller',
               i,
               controller.name,
@@ -838,7 +838,7 @@ export class WledWsPlatformAccessory {
    */
   onEffectsReceived() {
     const controller = <WledController>this.accessory.context.device;
-    this.log.info(
+    this.platform.log.info(
       `Received effects for controller %s ${this.loggingEnabled ? JSON.stringify(this.wledClient.effects) : ''}`,
       controller.name,
     );
@@ -850,7 +850,7 @@ export class WledWsPlatformAccessory {
    */
   onConfigReceived() {
     const controller = <WledController>this.accessory.context.device;
-    this.log.info(
+    this.platform.log.info(
       `Received config for controller %s ${this.loggingEnabled ? JSON.stringify(this.wledClient.config) : ''}`,
       controller.name,
     );
@@ -862,7 +862,7 @@ export class WledWsPlatformAccessory {
    */
   onInfoReceived() {
     const controller = <WledController>this.accessory.context.device;
-    this.log.info(
+    this.platform.log.info(
       `Received ${!this.init ? 'initial ' : ''}info for controller %s`,
       controller.name,
     );
@@ -881,7 +881,7 @@ export class WledWsPlatformAccessory {
    */
   refreshPresets() {
     const controller = <WledController>this.accessory.context.device;
-    this.log.info('Requesting presets for controller %s', controller.name);
+    this.platform.log.info('Requesting presets for controller %s', controller.name);
     this.wledClient.refreshPresets();
   }
 
@@ -890,7 +890,7 @@ export class WledWsPlatformAccessory {
    */
   refreshEffects() {
     const controller = <WledController>this.accessory.context.device;
-    this.log.info('Requesting effects for controller %s', controller.name);
+    this.platform.log.info('Requesting effects for controller %s', controller.name);
     this.wledClient.refreshEffects();
   }
 
@@ -899,7 +899,7 @@ export class WledWsPlatformAccessory {
    */
   onConnected() {
     const controller = <WledController>this.accessory.context.device;
-    this.log.info('Controller %s connected', controller.name);
+    this.platform.log.info('Controller %s connected', controller.name);
     this.connectionEstablished = true;
   }
 
@@ -909,7 +909,7 @@ export class WledWsPlatformAccessory {
   onDisconnected() {
     this.connectionEstablished = false;
     const controller = <WledController>this.accessory.context.device;
-    this.log.info('Controller %s disconnected', controller.name);
+    this.platform.log.info('Controller %s disconnected', controller.name);
   }
 
   /**
@@ -917,7 +917,7 @@ export class WledWsPlatformAccessory {
    */
   onError(error) {
     const controller = <WledController>this.accessory.context.device;
-    this.log.error(
+    this.platform.log.error(
       'Controller %s communication error: ' + error.message,
       controller.name,
     );
@@ -952,7 +952,7 @@ export class WledWsPlatformAccessory {
    */
   updateAccessoryInformation() {
     const controller = <WledController>this.accessory.context.device;
-    this.log.info(
+    this.platform.log.info(
       'Update accessory info for controller %s to: brand=%s product=%s version=%s mac=%s lc=%s',
       controller.name,
       this.wledClient.info.brand,
@@ -983,26 +983,26 @@ export class WledWsPlatformAccessory {
     if (!this.wledClient.info.leds.hasOwnProperty('lightCapabilities')) {
         this.wledClient.info.leds.segmentLightCapabilities = [1];
         this.wledClient.info.leds.lightCapabilities = 1;
-        this.log.error('Please update controller %s firmware to latest one!', controller.name);
+        this.platform.log.error('Please update controller %s firmware to latest one!', controller.name);
     }
     const lc: LightCapability = <LightCapability>(
       JSON.parse(this.wledClient.info.leds.lightCapabilities)
     );
 
     if (lc === LightCapability.OnOff) {
-      this.log.info('Controller %s supports OnOff channel', controller.name);
+      this.platform.log.info('Controller %s supports OnOff channel', controller.name);
     }
 
     if (lc === LightCapability.RGB) {
-      this.log.info('Controller %s supports RGB channel', controller.name);
+      this.platform.log.info('Controller %s supports RGB channel', controller.name);
     }
 
     if (lc === LightCapability.White) {
-      this.log.info('Controller %s supports White channel', controller.name);
+      this.platform.log.info('Controller %s supports White channel', controller.name);
     }
 
     if (lc === LightCapability.RGBW) {
-      this.log.info('Controller %s supports RGBW channel', controller.name);
+      this.platform.log.info('Controller %s supports RGBW channel', controller.name);
     }
 
     // register handlers for the Brightness Characteristic
