@@ -1,4 +1,4 @@
-## 0.0.17-beta.3 (2025-XX-XX)
+## 0.0.18 (2025-07-28)
 This is the first version supporting both Homebridge v1 and v2
 
 ### Features
