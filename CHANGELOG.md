@@ -1,16 +1,9 @@
-## 0.0.18 (2025-07-28)
-This is the first version supporting both Homebridge v1 and v2
+## 0.0.19 (2025-XX-XX)
 
 ### Features
 
 ### Improvements
-- **Node**: updated several dependencies
-- **WLED**: added support of WLED firmware version 0.15.0
-- **Homebridge**: added support for Homebridge v2
-- **Code**: Cleanup for better readability, added jest tests
-- **Node.js**: Removed Node.js 18 support, set required versions of Node.js 20, 22, 24
 
 ### Bugfixes
-- **WLED**: fixed chrash with older WLED firmware versions not supporting 'lightCapabilities' property (thanks to Vladimir)
 
 ### Known issues
