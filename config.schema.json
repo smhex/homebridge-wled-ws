@@ -61,7 +61,7 @@
         "title": "Logging",
         "type": "boolean",
         "default": false,
-        "description": "If enabled, the raw JSON API data is written to the log"
+        "description": "If enabled, additional log messages will be printed to the Homebridge log. This is useful for debugging purposes, but may also lead to a lot of log messages."
       }
     }
   },
