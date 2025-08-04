@@ -3,6 +3,7 @@
 ### Features
 
 ### Improvements
+- **Logging**: less verbose logging
 
 ### Bugfixes
 

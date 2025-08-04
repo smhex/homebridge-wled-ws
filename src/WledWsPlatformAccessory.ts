@@ -156,11 +156,13 @@ export class WledWsPlatformAccessory {
 
     this.ledState.On = value as boolean;
 
-    this.platform.log.info(
-      'Set controller %s On state to: %s',
-      controller.name,
-      value ? 'On' : 'Off',
-    );
+    if (this.loggingEnabled){
+      this.platform.log.info(
+        'Set controller %s On state to: %s',
+        controller.name,
+        value ? 'On' : 'Off',
+      );
+    }
     if (value) {
       this.wledClient.turnOn();
     } else {
@@ -207,18 +209,23 @@ export class WledWsPlatformAccessory {
 
     this.ledState.Live = value as boolean;
 
-    this.platform.log.info(
-      'Set controller %s On state to: %s',
-      controller.name,
-      value ? 'On' : 'Off',
-    );
+    if (this.loggingEnabled){
+      this.platform.log.info(
+        'Set controller %s On state to: %s',
+        controller.name,
+        value ? 'On' : 'Off',
+      );
+    }
+
     if (value) {
       this.wledClient.allowLiveData();
     } else {
-      this.platform.log.info(
-        'Resetting real time mode after stream for controller %s',
-        controller.resetRealTimeModeAfterStream ? 'true' : 'false',
-      );
+      if (this.loggingEnabled){
+        this.platform.log.info(
+          'Resetting real time mode after stream for controller %s',
+          controller.resetRealTimeModeAfterStream ? 'true' : 'false',
+        );
+      }
       this.wledClient.ignoreLiveData(!controller.resetRealTimeModeAfterStream);
     }
   }
@@ -253,11 +260,13 @@ export class WledWsPlatformAccessory {
 
     this.ledState.Brightness = value as number;
 
-    this.platform.log.info(
-      'Set controller %s brightness to: %s',
-      controller.name,
-      value,
-    );
+    if (this.loggingEnabled){
+      this.platform.log.info(
+        'Set controller %s brightness to: %s',
+        controller.name,
+        value,
+      );
+    }
     this.wledClient.setBrightness(
       Math.round((this.ledState.Brightness * 255) / 100),
     );
@@ -298,11 +307,14 @@ export class WledWsPlatformAccessory {
       this.ledState.Saturation / 100,
       this.ledState.Brightness / 100,
     );
-    this.platform.log.info(
-      `Set controller %s hue to: %s (RGB: ${r},${g},${b})`,
-      controller.name,
-      value,
-    );
+
+    if (this.loggingEnabled){
+      this.platform.log.info(
+        `Set controller %s hue to: %s (RGB: ${r},${g},${b})`,
+        controller.name,
+        value,
+      );
+    }
     this.wledClient.setColor([r, g, b]);
   }
 
@@ -336,11 +348,14 @@ export class WledWsPlatformAccessory {
       (value as number) / 100,
       this.ledState.Brightness / 100,
     );
-    this.platform.log.info(
-      `Set controller %s saturation to: %s (RGB: ${r},${g},${b})`,
-      controller.name,
-      value,
-    );
+
+    if (this.loggingEnabled){
+      this.platform.log.info(
+        `Set controller %s saturation to: %s (RGB: ${r},${g},${b})`,
+        controller.name,
+        value,
+      );
+    }
     this.wledClient.setColor([r, g, b]);
   }
 
@@ -375,14 +390,16 @@ export class WledWsPlatformAccessory {
       );
     }
 
-    this.platform.log.info(
-      'Set On state for %s %s (%s) of controller %s to: %s',
-      preset.isPlaylist ? 'playlist' : 'preset',
-      preset.id,
-      preset.name,
-      preset.controller.name,
-      value ? 'On' : 'Off',
-    );
+    if (this.loggingEnabled){
+      this.platform.log.info(
+        'Set On state for %s %s (%s) of controller %s to: %s',
+        preset.isPlaylist ? 'playlist' : 'preset',
+        preset.id,
+        preset.name,
+        preset.controller.name,
+        value ? 'On' : 'Off',
+      );
+    }
 
     // switch on new preset
     preset.on = <boolean>value;
@@ -411,7 +428,7 @@ export class WledWsPlatformAccessory {
 
   /**
    * Connect the controller and bind the callback handlers for
-   * 	state, info, effects, palettes, presets, deviceOptions, lightCapabilities, config
+   * state, info, effects, palettes, presets, deviceOptions, lightCapabilities, config
    */
   async connect(isReconnect: boolean): Promise<boolean> {
     this.connectionClosed = false;
@@ -505,18 +522,22 @@ export class WledWsPlatformAccessory {
    */
   onStateReceived() {
     const controller = <WledController>this.accessory.context.device;
-    this.platform.log.info(
-      `Received controller %s state update ${this.loggingEnabled ? JSON.stringify(this.wledClient.state) : ''}`,
+    this.platform.log.debug(
+      `Received controller %s state update ${JSON.stringify(this.wledClient.state)}`,
       controller.name,
     );
 
     if (this.ledState.On !== this.wledClient.state.on) {
       this.ledState.On = this.wledClient.state.on;
-      this.platform.log.info(
-        'Controller %s updated current On state to: %s',
-        controller.name,
-        this.ledState.On,
-      );
+
+      if (this.loggingEnabled){
+        this.platform.log.info(
+          'Controller %s updated current On state to: %s',
+          controller.name,
+          this.ledState.On,
+        );
+      }
+
       this.service.updateCharacteristic(
         this.platform.Characteristic.On,
         this.ledState.On,
@@ -526,11 +547,15 @@ export class WledWsPlatformAccessory {
     // liveDataOverride === 0 means live mode is active
     if (this.ledState.Live !== (this.wledClient.state.liveDataOverride === 0)) {
       this.ledState.Live = this.wledClient.state.liveDataOverride === 0;
-      this.platform.log.info(
-        'Controller %s updated current Live state to: %s',
-        controller.name,
-        this.ledState.Live,
-      );
+
+      if (this.loggingEnabled){
+        this.platform.log.info(
+          'Controller %s updated current Live state to: %s',
+          controller.name,
+          this.ledState.Live,
+        );
+      }
+
       if (this.realTimeService) {
         this.realTimeService.updateCharacteristic(
           this.platform.Characteristic.On,
@@ -545,11 +570,15 @@ export class WledWsPlatformAccessory {
       );
       if (this.ledState.Brightness !== brightness) {
         this.ledState.Brightness = brightness;
-        this.platform.log.info(
-          'Controller %s updated current brightness to: %s',
-          controller.name,
-          this.ledState.Brightness,
-        );
+
+        if (this.loggingEnabled){
+          this.platform.log.info(
+            'Controller %s updated current brightness to: %s',
+            controller.name,
+            this.ledState.Brightness,
+          );
+        }
+      
         this.service.updateCharacteristic(
           this.platform.Characteristic.Brightness,
           this.ledState.Brightness,
@@ -597,23 +626,30 @@ export class WledWsPlatformAccessory {
 
     // check for updated preset
     if (this.ledState.PresetId !== this.wledClient.state.presetId) {
-      this.platform.log.info(
-        'Controller %s updated current preset to: %s',
-        controller.name,
-        this.wledClient.state.presetId,
-      );
+
+      if (this.loggingEnabled){
+        this.platform.log.info(
+          'Controller %s updated current preset to: %s',
+          controller.name,
+          this.wledClient.state.presetId,
+        );
+      }
 
       // switch off active preset first
       if (this.activePreset !== null) {
         this.activePreset.on = false;
-        this.platform.log.info(
-          'Set On state for last active %s %s (%s) of controller %s to: %s',
-          this.activePreset.isPlaylist ? 'playlist' : 'preset',
-          this.activePreset.id,
-          this.activePreset.name,
-          this.activePreset.controller.name,
-          this.activePreset.on ? 'On' : 'Off',
-        );
+
+        if (this.loggingEnabled){
+          this.platform.log.info(
+            'Set On state for last active %s %s (%s) of controller %s to: %s',
+            this.activePreset.isPlaylist ? 'playlist' : 'preset',
+            this.activePreset.id,
+            this.activePreset.name,
+            this.activePreset.controller.name,
+            this.activePreset.on ? 'On' : 'Off',
+          );
+        }
+      
         this.activePreset.hapService.updateCharacteristic(
           this.platform.Characteristic.On,
           this.activePreset.on,
@@ -632,14 +668,18 @@ export class WledWsPlatformAccessory {
       );
       if (newPreset !== undefined) {
         newPreset.on = this.ledState.On;
-        this.platform.log.info(
-          'Set On state for new %s %s (%s) of controller %s to: %s',
-          newPreset.isPlaylist ? 'playlist' : 'preset',
-          newPreset.id,
-          newPreset.name,
-          newPreset.controller.name,
-          newPreset.on ? 'On' : 'Off',
-        );
+
+        if (this.loggingEnabled){
+          this.platform.log.info(
+            'Set On state for new %s %s (%s) of controller %s to: %s',
+            newPreset.isPlaylist ? 'playlist' : 'preset',
+            newPreset.id,
+            newPreset.name,
+            newPreset.controller.name,
+            newPreset.on ? 'On' : 'Off',
+          );
+        }
+      
         newPreset.hapService.updateCharacteristic(
           this.platform.Characteristic.On,
           newPreset.on,
@@ -666,11 +706,14 @@ export class WledWsPlatformAccessory {
     // check for updated playlist
     if (this.ledState.PlaylistId !== this.wledClient.state.playlistId) {
       if (this.wledClient.state.playlistId !== '-1') {
-        this.platform.log.info(
-          'Controller %s updated current playlist to: %s',
-          controller.name,
-          this.wledClient.state.playlistId,
-        );
+
+        if (this.loggingEnabled){
+          this.platform.log.info(
+            'Controller %s updated current playlist to: %s',
+            controller.name,
+            this.wledClient.state.playlistId,
+          );
+        }
 
         // immediately switch off playlist
         const newPlaylist = this.presetList.find(
@@ -678,14 +721,18 @@ export class WledWsPlatformAccessory {
         );
         if (newPlaylist !== undefined) {
           newPlaylist.on = false;
-          this.platform.log.info(
-            'Set On state for new %s %s (%s) of controller %s to: %s',
-            newPlaylist.isPlaylist ? 'playlist' : 'preset',
-            newPlaylist.id,
-            newPlaylist.name,
-            newPlaylist.controller.name,
-            newPlaylist.on ? 'On' : 'Off',
-          );
+
+          if (this.loggingEnabled){
+            this.platform.log.info(
+              'Set On state for new %s %s (%s) of controller %s to: %s',
+              newPlaylist.isPlaylist ? 'playlist' : 'preset',
+              newPlaylist.id,
+              newPlaylist.name,
+              newPlaylist.controller.name,
+              newPlaylist.on ? 'On' : 'Off',
+            );
+          }
+        
           newPlaylist.hapService.updateCharacteristic(
             this.platform.Characteristic.On,
             newPlaylist.on,
@@ -703,10 +750,13 @@ export class WledWsPlatformAccessory {
    */
   onPresetsReceived() {
     const controller = <WledController>this.accessory.context.device;
-    this.platform.log.info(
-      `Received presets for controller %s ${this.loggingEnabled ? JSON.stringify(this.wledClient.presets) : ''}`,
-      controller.name,
-    );
+
+    if (this.loggingEnabled){
+      this.platform.log.debug(
+        `Received presets for controller %s ${JSON.stringify(this.wledClient.presets)}`,
+        controller.name,
+      );
+    }
 
     // check if presets are configured by user and create list of available presets on the controller
     if (controller.presets !== undefined) {
@@ -838,8 +888,8 @@ export class WledWsPlatformAccessory {
    */
   onEffectsReceived() {
     const controller = <WledController>this.accessory.context.device;
-    this.platform.log.info(
-      `Received effects for controller %s ${this.loggingEnabled ? JSON.stringify(this.wledClient.effects) : ''}`,
+    this.platform.log.debug(
+      `Received effects for controller %s ${JSON.stringify(this.wledClient.effects)}`,
       controller.name,
     );
   }
@@ -850,8 +900,8 @@ export class WledWsPlatformAccessory {
    */
   onConfigReceived() {
     const controller = <WledController>this.accessory.context.device;
-    this.platform.log.info(
-      `Received config for controller %s ${this.loggingEnabled ? JSON.stringify(this.wledClient.config) : ''}`,
+    this.platform.log.debug(
+      `Received config for controller %s ${JSON.stringify(this.wledClient.config)}`,
       controller.name,
     );
   }
@@ -862,10 +912,14 @@ export class WledWsPlatformAccessory {
    */
   onInfoReceived() {
     const controller = <WledController>this.accessory.context.device;
-    this.platform.log.info(
-      `Received ${!this.init ? 'initial ' : ''}info for controller %s`,
-      controller.name,
-    );
+
+    if (this.loggingEnabled){
+      this.platform.log.info(
+        `Received ${!this.init ? 'initial ' : ''}info for controller %s`,
+        controller.name,
+      );
+    }
+  
 
     // initialize accessory information only once at startup
     if (!this.init) {
@@ -881,7 +935,11 @@ export class WledWsPlatformAccessory {
    */
   refreshPresets() {
     const controller = <WledController>this.accessory.context.device;
-    this.platform.log.info('Requesting presets for controller %s', controller.name);
+
+    if (this.loggingEnabled){
+      this.platform.log.info('Requesting presets for controller %s', controller.name);
+    }
+    
     this.wledClient.refreshPresets();
   }
 
@@ -890,7 +948,11 @@ export class WledWsPlatformAccessory {
    */
   refreshEffects() {
     const controller = <WledController>this.accessory.context.device;
-    this.platform.log.info('Requesting effects for controller %s', controller.name);
+
+    if (this.loggingEnabled){
+      this.platform.log.info('Requesting effects for controller %s', controller.name);
+    }
+    
     this.wledClient.refreshEffects();
   }
 
@@ -981,9 +1043,9 @@ export class WledWsPlatformAccessory {
       );
       
     if (!this.wledClient.info.leds.hasOwnProperty('lightCapabilities')) {
-        this.wledClient.info.leds.segmentLightCapabilities = [1];
-        this.wledClient.info.leds.lightCapabilities = 1;
-        this.platform.log.error('Please update controller %s firmware to latest one!', controller.name);
+      this.wledClient.info.leds.segmentLightCapabilities = [1];
+      this.wledClient.info.leds.lightCapabilities = 1;
+      this.platform.log.error('Please update controller %s firmware to latest one!', controller.name);
     }
     const lc: LightCapability = <LightCapability>(
       JSON.parse(this.wledClient.info.leds.lightCapabilities)
