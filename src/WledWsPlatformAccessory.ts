@@ -433,6 +433,11 @@ export class WledWsPlatformAccessory {
   async connect(isReconnect: boolean): Promise<boolean> {
     this.connectionClosed = false;
 
+    if (this.wledClient) {
+      this.wledClient.removeAllListeners();
+      this.wledClient.disconnect();
+    }
+
     const controller = <WledController>this.accessory.context.device;
     this.platform.log.info(
       `${isReconnect ? 'Reconnecting' : 'Connecting'} to controller %s at address %s`,
