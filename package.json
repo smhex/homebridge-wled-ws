@@ -36,27 +36,18 @@
     "test": "jest --detectOpenHandles"
   },
   "dependencies": {
+    "glob": "^13.0.6",
     "wled-client": "^0.22.1"
   },
   "publishConfig": {
     "@smhex:registry": "https://npm.pkg.github.com"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3.2.0",
-    "@eslint/js": "^10.0.1",
-    "@types/jest": "^30.0.0",
-    "@types/node": "^25.0.3",
-    "@typescript-eslint/eslint-plugin": "^8.20.0",
-    "@typescript-eslint/parser": "^8.20.0",
     "eslint": "^10.0.2",
-    "globals": "^17.0.0",
     "homebridge": "^1.7.0",
     "jest": "^30.0.4",
     "nodemon": "^3.0.3",
-    "rimraf": "^6.0.1",
     "ts-jest": "^29.4.0",
-    "ts-node": "^10.9.1",
-    "type-fest": "^5.1.0",
     "typescript": "^6.0.2",
     "typescript-eslint": "^8.27.0"
   }
