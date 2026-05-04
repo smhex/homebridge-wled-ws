@@ -972,6 +972,18 @@ export class WledWsPlatformAccessory {
     this.connectionEstablished = false;
     const controller = <WledController>this.accessory.context.device;
     this.platform.log.info('Controller %s disconnected', controller.name);
+
+    if (this.reconnectIntervalId !== null) {
+      clearTimeout(this.reconnectIntervalId);
+    }
+
+    if (!this.connectionClosed) {
+      this.reconnectIntervalId = setTimeout(() => {
+        if (!this.connectionEstablished) {
+          this.connect(true);
+        }
+      }, this.reconnectIntervalMillis);
+    }
   }
 
   /**
@@ -991,7 +1003,9 @@ export class WledWsPlatformAccessory {
 
     if (!this.connectionClosed) {
       this.reconnectIntervalId = setTimeout(() => {
-        this.connect(true);
+        if (!this.connectionEstablished) {
+          this.connect(true);
+        }
       }, this.reconnectIntervalMillis);
     }
   }
