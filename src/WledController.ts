@@ -14,6 +14,8 @@ export enum LightCapability {
   RGB = 1,
   White = 2,
   RGBW = 3,
+  WCCT = 6,
+  RGBWCCT = 7
 }
 
 export interface WledControllerPreset {

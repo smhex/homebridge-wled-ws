@@ -14,7 +14,7 @@ import {
 import { WLEDClient } from 'wled-client';
 import { Logger } from 'homebridge';
 import { PLUGIN_NAME, PLUGIN_AUTHOR } from './settings';
-import { rgbToHsv, hsvToRgb } from './WledUtils';
+import { rgbToHsv, hsvToRgb, miredToCct, cctToMired } from './WledUtils';
 import Timeout = NodeJS.Timeout;
 
 /**
@@ -54,6 +54,7 @@ export class WledWsPlatformAccessory {
     Hue: 0,
     Saturation: 0,
     Value: 0,
+    ColorTemperature: 300,
     PresetId: '-1',
     PlaylistId: '-1',
     LightCapability: LightCapability.OnOff,
@@ -372,6 +373,36 @@ export class WledWsPlatformAccessory {
     );
     return saturation;
   }
+    
+  /**
+   * Handle "SET" requests from HomeKit
+   * These are sent when the user changes the state of an accessory, for example, changing the Color Temperature
+   */
+  async setColorTemperature(mired) {
+    // only proceed if controller is connected
+    const controller = this.accessory.context.device;
+    if (!this.connectionEstablished) {
+      this.platform.log.error('No connection to controller %s', controller.name);
+      throw new this.platform.api.hap.HapStatusError(-70402 /* this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE */);
+    }
+        
+    const cct = miredToCct(mired);
+    this.ledState.ColorTemperature = cct;
+        
+    this.platform.log.info(`Set controller %s temperature to: %s `, controller.name, cct);
+    this.wledClient.setColor([0, 0, 0, 255]);
+    this.wledClient.setCCT(cct);
+  }
+    
+  /**
+   * Returns the temperature value to Homekit
+   */
+  async getColorTemperature() {
+    const temperature = this.ledState.ColorTemperature;
+    const controller = this.accessory.context.device;
+    this.platform.log.debug('Get controller %s temperature: %s', controller.name, temperature);
+    return temperature;
+  }
 
   /**
    * Sets the preset state from Homekit
@@ -589,7 +620,8 @@ export class WledWsPlatformAccessory {
     // update current color settings (if changed outside Homekit)
     if (
       this.ledState.LightCapability === LightCapability.RGB ||
-      this.ledState.LightCapability === LightCapability.RGBW
+      this.ledState.LightCapability === LightCapability.RGBW ||
+      this.ledState.LightCapability === LightCapability.RGBWCCT
     ) {
       const val = this.wledClient.state.segments[0].colors[0];
       const { h, s, v } = rgbToHsv(val[0], val[1], val[2]);
@@ -623,7 +655,19 @@ export class WledWsPlatformAccessory {
         );
       }
     }
-
+    
+    // update current color settings (if changed outside Homekit)
+    if (this.ledState.LightCapability === LightCapability.WCCT ||
+        this.ledState.LightCapability === LightCapability.RGBWCCT) {
+      const val = this.wledClient.state.segments[0].cct;
+      const mired = cctToMired(val);
+          
+      this.ledState.ColorTemperature = mired;
+      this.platform.log.info('Controller %s updated current color temperture to: %s', controller.name, val);
+          
+      this.service.updateCharacteristic(this.platform.Characteristic.ColorTemperature, this.ledState.ColorTemperature);
+    }
+      
     // check for updated preset
     if (this.ledState.PresetId !== this.wledClient.state.presetId) {
 
@@ -1024,7 +1068,7 @@ export class WledWsPlatformAccessory {
    * RGB Color LED stripe: LightBulb with characteristic On, Brightness, Hue, Saturation
    * RGB Color LED stripe with White LED:
    *        - LightBulb with characteristic On, Brightness, Hue, Saturation for RGB
-   *        - LightBulb with characteristic On, Brightness for White (can be disabled in settings)
+   *        - ColorTemperture characteristic is used if WLED reports CCT supported
    */
   updateAccessoryInformation() {
     const controller = <WledController>this.accessory.context.device;
@@ -1080,12 +1124,17 @@ export class WledWsPlatformAccessory {
     if (lc === LightCapability.RGBW) {
       this.platform.log.info('Controller %s supports RGBW channel', controller.name);
     }
+      
+    if (lc === LightCapability.WCCT) {
+      this.platform.log.info('Controller %s supports White channel with CCT', controller.name);
+    }
+    if (lc === LightCapability.RGBWCCT) {
+      this.platform.log.info('Controller %s supports RGBW channel with CCT', controller.name);
+    }
 
     // register handlers for the Brightness Characteristic
     if (
-      lc === LightCapability.RGB ||
-      lc === LightCapability.RGBW ||
-      lc === LightCapability.White
+      lc > LightCapability.OnOff
     ) {
       this.service
         .getCharacteristic(this.platform.Characteristic.Brightness)
@@ -1094,7 +1143,7 @@ export class WledWsPlatformAccessory {
     }
 
     // register handlers for the Hue and Saturation Characteristic
-    if (lc === LightCapability.RGB || lc === LightCapability.RGBW) {
+    if (lc === LightCapability.RGB || lc === LightCapability.RGBW || lc === LightCapability.RGBWCCT) {
       this.service
         .getCharacteristic(this.platform.Characteristic.Hue)
         .onSet(this.setHue.bind(this))
@@ -1105,6 +1154,16 @@ export class WledWsPlatformAccessory {
         .onGet(this.getSaturation.bind(this))
         .onSet(this.setSaturation.bind(this));
     }
+      
+    // register handlers for the Color Temperature Characteristic
+    if (lc === LightCapability.WCCT || lc === LightCapability.RGBWCCT) {
+      this.service
+        .getCharacteristic(this.platform.Characteristic.ColorTemperature)
+        .onSet(this.setColorTemperature.bind(this))
+        .onGet(this.getColorTemperature.bind(this));
+    }
+      
+      
     this.ledState.LightCapability = lc;
   }
 }
