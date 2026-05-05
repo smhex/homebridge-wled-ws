@@ -118,3 +118,27 @@ export function hsvToRgb(
 
   return { r: normalizedR, g: normalizedG, b: normalizedB };
 }
+
+/**
+ * Translates mired to CCT
+ * @param mired
+ * @returns cct 0..255
+ */
+export function miredToCct(mired: number): number {
+  let cct = Math.round(255 * (500 - mired) / (500 - 140));
+  if (cct < 0) cct = 0;
+  if (cct > 255) cct = 255;
+  return cct;
+}
+
+/**
+ * Translates CCT to mired value
+ * @param cct
+ * @returns mired 140..500
+ */
+export function cctToMired(cct: number): number {
+  let mired = Math.round(500 - (cct / 255) * (500 - 140));
+  if (mired < 140) mired = 140;
+  if (mired > 500) mired = 500;
+  return mired;
+}
