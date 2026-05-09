@@ -4,6 +4,7 @@
 - **CCT Support**: Adds CCT support for white or RGB lights
 
 ### Improvements
+- **Security**: Updated dependencies and fixed vulnerabilities
 
 ### Bugfixes
 - **Brightness**: Brightness is now correctly set
