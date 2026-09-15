@@ -41,7 +41,10 @@ export class WledWsPlatformAccessory {
   private connectionClosed = false;
   private connectionEstablished = false;
   private reconnectIntervalId: Timeout | null = null;
+  private heartbeatIntervalId: Timeout | null = null;
   private reconnectIntervalMillis = 10000;
+  private heartbeatIntervalMillis = 30000;
+  private heartbeatSupported = true;
   private init = false;
 
   /**
@@ -475,7 +478,7 @@ export class WledWsPlatformAccessory {
     this.wledClient = new WLEDClient({
       host: controller.address,
       websocket: {
-        reconnect: true,
+        reconnect: false, // we have our own reconnect logic, turn off WLEDClient reconnect
       },
       immediate: true,
       secure: false,
@@ -490,31 +493,38 @@ export class WledWsPlatformAccessory {
     });
 
     this.wledClient.on('close', () => {
+      this.clearHeartbeat();
       this.onDisconnected();
     });
 
     // update accessory state
     this.wledClient.on('update:state', () => {
+      this.resetHeartbeatInterval();
       this.onStateReceived();
     });
 
     this.wledClient.on('update:presets', () => {
+      this.resetHeartbeatInterval();
       this.onPresetsReceived();
     });
 
     this.wledClient.on('update:effects', () => {
+      this.resetHeartbeatInterval();
       this.onEffectsReceived();
     });
 
     this.wledClient.on('update:config', () => {
+      this.resetHeartbeatInterval();
       this.onConfigReceived();
     });
 
     this.wledClient.on('update:info', () => {
+      this.resetHeartbeatInterval();
       this.onInfoReceived();
     });
 
     this.wledClient.on('error', (error) => {
+      this.clearHeartbeat();
       this.onError(error);
     });
 
@@ -540,8 +550,10 @@ export class WledWsPlatformAccessory {
 
       if (this.reconnectIntervalId !== null) {
         clearTimeout(this.reconnectIntervalId);
+        this.reconnectIntervalId = null;
       }
 
+      this.clearHeartbeat();
       this.connectionClosed = true;
       this.wledClient.disconnect();
     }
@@ -1007,8 +1019,95 @@ export class WledWsPlatformAccessory {
     const controller = <WledController>this.accessory.context.device;
     this.platform.log.info('Controller %s connected', controller.name);
     this.connectionEstablished = true;
+    this.resetHeartbeatInterval();
   }
-
+  
+  /**
+   * Reset the active websocket heartbeat interval. Any websocket data from WLED
+   * counts as activity, so the next ping is only sent after the connection has
+   * been quiet for heartbeatIntervalMillis.
+   */
+  resetHeartbeatInterval() {
+    this.clearHeartbeat();
+    
+    if (
+      !this.heartbeatSupported ||
+      this.connectionClosed ||
+      !this.connectionEstablished
+    ) {
+      return;
+    }
+    
+    this.heartbeatIntervalId = setTimeout(() => {
+      this.sendHeartbeatPing();
+    }, this.heartbeatIntervalMillis);
+  }
+  
+  /**
+   * Send a websocket ping and reconnect if the underlying websocket rejects it.
+   */
+  sendHeartbeatPing() {
+    if (
+      !this.heartbeatSupported ||
+      this.connectionClosed ||
+      !this.connectionEstablished
+    ) {
+      return;
+    }
+    
+    const controller = <WledController>this.accessory.context.device;
+    const websocket = this.wledClient.WSAPI?.websocket;
+    const ping = websocket?.ping;
+    
+    if (typeof ping !== 'function') {
+      this.heartbeatSupported = false;
+      this.clearHeartbeat();
+      
+      this.platform.log.debug(
+        'Controller %s websocket heartbeat disabled; ping() is unavailable.',
+        controller.name,
+      );
+      
+      return;
+    }
+    
+    try {
+      ping.call(websocket);
+      this.resetHeartbeatInterval();
+    } catch (error) {
+      this.platform.log.info(
+        'Controller %s websocket heartbeat ping failed; reconnecting: %s',
+        controller.name,
+        error instanceof Error ? error.message : error,
+      );
+      
+      this.connectionEstablished = false;
+      this.clearHeartbeat();
+      
+      try {
+        this.wledClient.disconnect();
+      } catch (disconnectError) {
+        this.platform.log.error(
+          'Error disconnecting stale websocket for controller %s: %s',
+          controller.name,
+          disconnectError instanceof Error ? disconnectError.message : disconnectError,
+        );
+      }
+      
+      this.onDisconnected();
+    }
+  }
+  
+  /**
+   * Clear the active websocket heartbeat interval.
+   */
+  clearHeartbeat() {
+    if (this.heartbeatIntervalId !== null) {
+      clearTimeout(this.heartbeatIntervalId);
+      this.heartbeatIntervalId = null;
+    }
+  }
+  
   /**
    * Callback: connection to the controller is closed
    */
@@ -1016,9 +1115,12 @@ export class WledWsPlatformAccessory {
     this.connectionEstablished = false;
     const controller = <WledController>this.accessory.context.device;
     this.platform.log.info('Controller %s disconnected', controller.name);
-
+    
+    this.clearHeartbeat();
+    
     if (this.reconnectIntervalId !== null) {
       clearTimeout(this.reconnectIntervalId);
+      this.reconnectIntervalId = null;
     }
 
     if (!this.connectionClosed) {
@@ -1040,9 +1142,12 @@ export class WledWsPlatformAccessory {
       controller.name,
     );
     this.connectionEstablished = false;
-
+    
+    this.clearHeartbeat();
+    
     if (this.reconnectIntervalId !== null) {
       clearTimeout(this.reconnectIntervalId);
+      this.reconnectIntervalId = null;
     }
 
     if (!this.connectionClosed) {
