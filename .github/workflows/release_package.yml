@@ -7,6 +7,7 @@ permissions:
 on:
   release:
     types: [created]
+  workflow_dispatch:
 
 jobs:
 
@@ -36,7 +37,7 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      packages: write
+      id-token: write
       contents: read
     steps:
       - uses: actions/checkout@v4
@@ -44,7 +45,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-            node-version: 18
+            node-version: 24
             registry-url: https://registry.npmjs.org
 
       - name: Install dependencies
@@ -52,5 +53,3 @@ jobs:
 
       - name: Publish to registry 
         run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
