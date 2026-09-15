@@ -25,6 +25,10 @@ This is a Homebridge dynamic platform plugin for controlling LED strips connecte
 
 The plugin adds a Lightbulb to Homekit for every configured WLED controller. The Lightbulb can be switched on and off and it's dimmable. Depending on the LED configuration additional services will be made available (e.g. color selection). For each configured preset a switch is created that can be used in for  automation. Unlike other plugins the preset selection is not implemented as a Homekit Television service.
 
+## Connection recovery
+
+The plugin manages WebSocket reconnection itself. After 30 seconds without incoming WLED updates, it sends a WebSocket heartbeat. If sending that heartbeat fails, the plugin reconnects automatically. No additional configuration is required.
+
 ## Configuration
 
 The plugin supports schema based configuration. All settings can be entered using the plugin's configuration dialog. There is a basic input data validation included, however this needs to be improved in future versions.
@@ -87,4 +91,4 @@ Before starting the implementation of this plugin I intended to use WLED's MQTT 
 ## Thanks to the contributors
 
 - @LeLunZ for adding live mode support
-- @smitty078 for adding CCT support
+- @smitty078 for adding CCT support and improving WebSocket connection recovery
