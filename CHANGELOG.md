@@ -1,3 +1,8 @@
+## 0.0.24 (2026-09-14)
+
+### Improvements
+- **Security**: Updated vulnerable transitive dependencies
+
 ## 0.0.23 (2026-05-09)
 
 ### Features
