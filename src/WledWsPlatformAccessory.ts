@@ -2,8 +2,6 @@ import {
   Service,
   PlatformAccessory,
   CharacteristicValue,
-  CharacteristicGetCallback,
-  CharacteristicSetCallback,
 } from 'homebridge';
 import { WledWsHomebridgePlatform } from './WledWsHomebridgePlatform';
 import {
@@ -410,11 +408,7 @@ export class WledWsPlatformAccessory {
   /**
    * Sets the preset state from Homekit
    */
-  async setPreset(
-    preset: WledControllerPreset,
-    value: CharacteristicValue,
-    callback: CharacteristicSetCallback,
-  ) {
+  async setPreset(preset: WledControllerPreset, value: CharacteristicValue) {
     // only proceed if controller is connected
     const controller = <WledController>this.accessory.context.device;
     if (!this.connectionEstablished) {
@@ -442,13 +436,12 @@ export class WledWsPlatformAccessory {
     } else {
       this.wledClient.turnOff();
     }
-    callback(null);
   }
 
   /**
    * Returns the preset state to Homekit
    */
-  getPreset(preset: WledControllerPreset, callback: CharacteristicGetCallback) {
+  async getPreset(preset: WledControllerPreset): Promise<CharacteristicValue> {
     this.platform.log.debug(
       'Get On state for %s %s (%s) of controller %s: %s',
       preset.isPlaylist ? 'playlist' : 'preset',
@@ -457,7 +450,7 @@ export class WledWsPlatformAccessory {
       preset.controller.name,
       preset.on ? 'On' : 'Off',
     );
-    callback(null, preset.on);
+    return preset.on;
   }
 
   /**
@@ -947,12 +940,8 @@ export class WledWsPlatformAccessory {
 
         presetSwitchService
           .getCharacteristic(this.platform.Characteristic.On)
-          .on('get', (callback) => {
-            this.getPreset(wledControllerPreset, callback);
-          })
-          .on('set', (value, callback) => {
-            this.setPreset(wledControllerPreset, value, callback);
-          });
+          .onGet(() => this.getPreset(wledControllerPreset))
+          .onSet((value) => this.setPreset(wledControllerPreset, value));
 
         // store them for later usage
         this.presetList.push(wledControllerPreset);
