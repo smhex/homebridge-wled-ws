@@ -561,6 +561,17 @@ export class WledWsPlatformAccessory {
         controller.address,
       );
     }
+
+    // WLEDClient only reports an error if both HTTP and websocket failed. If just the websocket
+    // could not be opened, no event is emitted at all - make sure a reconnect is scheduled anyway
+    if (isCurrent() && !this.connectionEstablished && !this.connectionClosed) {
+      this.platform.log.error(
+        'Websocket connection to controller %s at address %s could not be established',
+        controller.name,
+        controller.address,
+      );
+      this.scheduleReconnect();
+    }
     return true;
   }
 
@@ -1168,18 +1179,7 @@ export class WledWsPlatformAccessory {
     
     this.clearHeartbeat();
     
-    if (this.reconnectIntervalId !== null) {
-      clearTimeout(this.reconnectIntervalId);
-      this.reconnectIntervalId = null;
-    }
-
-    if (!this.connectionClosed) {
-      this.reconnectIntervalId = setTimeout(() => {
-        if (!this.connectionEstablished) {
-          this.connect(true);
-        }
-      }, this.reconnectIntervalMillis);
-    }
+    this.scheduleReconnect();
   }
 
   /**
@@ -1195,6 +1195,13 @@ export class WledWsPlatformAccessory {
     
     this.clearHeartbeat();
     
+    this.scheduleReconnect();
+  }
+
+  /**
+   * (Re)starts the reconnect timer unless the connection was closed on purpose
+   */
+  scheduleReconnect() {
     if (this.reconnectIntervalId !== null) {
       clearTimeout(this.reconnectIntervalId);
       this.reconnectIntervalId = null;
@@ -1202,6 +1209,7 @@ export class WledWsPlatformAccessory {
 
     if (!this.connectionClosed) {
       this.reconnectIntervalId = setTimeout(() => {
+        this.reconnectIntervalId = null;
         if (!this.connectionEstablished) {
           this.connect(true);
         }

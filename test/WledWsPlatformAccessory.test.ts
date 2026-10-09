@@ -126,6 +126,11 @@ describe('WledWsPlatformAccessory', () => {
     instance['connectionEstablished'] = true;
   });
 
+  afterEach(() => {
+    // stops the reconnect timer scheduled for the never opened mock connection
+    instance.disconnect();
+  });
+
   it('should instantiate without errors', () => {
     expect(instance).toBeDefined();
   });
