@@ -24,6 +24,7 @@ const mockPlatformAccessory = {
   getService: jest.fn().mockReturnValue(mockService),
   addService: jest.fn().mockReturnValue(mockService),
   getServiceById: jest.fn().mockReturnValue(mockService),
+  services: [],
   removeService: jest.fn(),
   context: { device: { name: 'TestDevice', address: '127.0.0.1' } },
   displayName: 'TestDevice',

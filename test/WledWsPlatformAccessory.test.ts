@@ -22,6 +22,7 @@ const mockAccessory =  {
   getService: jest.fn().mockReturnValue(mockService),
   addService: jest.fn().mockReturnValue(mockService),
   getServiceById: jest.fn().mockReturnValue(undefined),
+  services: [],
   removeService: jest.fn(),
   context: {
     device: {

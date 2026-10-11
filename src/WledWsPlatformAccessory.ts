@@ -138,6 +138,17 @@ export class WledWsPlatformAccessory {
       this.service.addLinkedService(this.realTimeService);
     }
 
+    // preset switches restored from the cache get their handlers once the presets are received.
+    // Until then reject changes, otherwise HomeKit would accept them without anything happening
+    for (const presetSwitchService of this.accessory.services) {
+      if (presetSwitchService.subtype?.startsWith('WLED-PRESET-')) {
+        presetSwitchService
+          .getCharacteristic(this.platform.Characteristic.On)
+          .onGet(() => false)
+          .onSet(() => this.rejectPresetNotLoaded());
+      }
+    }
+
     // Connect the controller with Reconnect-Flag set to false
     this.connect(false);
   }
@@ -436,6 +447,20 @@ export class WledWsPlatformAccessory {
     } else {
       this.wledClient.turnOff();
     }
+  }
+
+  /**
+   * Rejects a change of a cached preset switch whose preset has not been received from the controller yet
+   */
+  rejectPresetNotLoaded(): never {
+    const controller = <WledController>this.accessory.context.device;
+    this.platform.log.error(
+      'Presets of controller %s not loaded yet',
+      controller.name,
+    );
+    throw new this.platform.api.hap.HapStatusError(
+      this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE,
+    );
   }
 
   /**
