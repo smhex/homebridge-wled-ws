@@ -466,6 +466,7 @@ export class WledWsPlatformAccessory {
    */
   async connect(isReconnect: boolean): Promise<boolean> {
     this.connectionClosed = false;
+    this.connectionEstablished = false;
 
     const controller = <WledController>this.accessory.context.device;
     this.platform.log.info(
@@ -474,8 +475,11 @@ export class WledWsPlatformAccessory {
       controller.address,
     );
 
+    // drop a previous client (if any) so its socket can't linger or report stale events
+    this.terminateWebsocket();
+
     //this.wledClient = new WLEDClient(controller.address);
-    this.wledClient = new WLEDClient({
+    const client = new WLEDClient({
       host: controller.address,
       websocket: {
         reconnect: false, // we have our own reconnect logic, turn off WLEDClient reconnect
@@ -487,49 +491,69 @@ export class WledWsPlatformAccessory {
         config: true,
       },
     });
+    this.wledClient = client;
 
-    this.wledClient.on('open', () => {
-      this.onConnected();
+    // events of a client that has been replaced by a reconnect must not touch the current state
+    const isCurrent = () => client === this.wledClient;
+
+    client.on('open', () => {
+      if (isCurrent()) {
+        this.onConnected();
+      }
     });
 
-    this.wledClient.on('close', () => {
-      this.clearHeartbeat();
-      this.onDisconnected();
+    client.on('close', () => {
+      if (isCurrent()) {
+        this.clearHeartbeat();
+        this.onDisconnected();
+      }
     });
 
     // update accessory state
-    this.wledClient.on('update:state', () => {
-      this.resetHeartbeatInterval();
-      this.onStateReceived();
+    client.on('update:state', () => {
+      if (isCurrent()) {
+        this.resetHeartbeatInterval();
+        this.onStateReceived();
+      }
     });
 
-    this.wledClient.on('update:presets', () => {
-      this.resetHeartbeatInterval();
-      this.onPresetsReceived();
+    client.on('update:presets', () => {
+      if (isCurrent()) {
+        this.resetHeartbeatInterval();
+        this.onPresetsReceived();
+      }
     });
 
-    this.wledClient.on('update:effects', () => {
-      this.resetHeartbeatInterval();
-      this.onEffectsReceived();
+    client.on('update:effects', () => {
+      if (isCurrent()) {
+        this.resetHeartbeatInterval();
+        this.onEffectsReceived();
+      }
     });
 
-    this.wledClient.on('update:config', () => {
-      this.resetHeartbeatInterval();
-      this.onConfigReceived();
+    client.on('update:config', () => {
+      if (isCurrent()) {
+        this.resetHeartbeatInterval();
+        this.onConfigReceived();
+      }
     });
 
-    this.wledClient.on('update:info', () => {
-      this.resetHeartbeatInterval();
-      this.onInfoReceived();
+    client.on('update:info', () => {
+      if (isCurrent()) {
+        this.resetHeartbeatInterval();
+        this.onInfoReceived();
+      }
     });
 
-    this.wledClient.on('error', (error) => {
-      this.clearHeartbeat();
-      this.onError(error);
+    client.on('error', (error) => {
+      if (isCurrent()) {
+        this.clearHeartbeat();
+        this.onError(error);
+      }
     });
 
     try {
-      await this.wledClient.init();
+      await client.init();
     } catch {
       this.platform.log.error(
         'Error connecting controller %s at address %s',
@@ -556,6 +580,32 @@ export class WledWsPlatformAccessory {
       this.clearHeartbeat();
       this.connectionClosed = true;
       this.wledClient.disconnect();
+    }
+  }
+
+  /**
+   * Close the current websocket immediately. A regular close() waits for the closing
+   * handshake, which never completes on a dead connection.
+   */
+  terminateWebsocket() {
+    if (!this.wledClient) {
+      return;
+    }
+
+    const controller = <WledController>this.accessory.context.device;
+    try {
+      const websocket = this.wledClient.WSAPI?.websocket;
+      if (websocket && typeof websocket.terminate === 'function') {
+        websocket.terminate();
+      } else {
+        this.wledClient.disconnect();
+      }
+    } catch (error) {
+      this.platform.log.error(
+        'Error disconnecting stale websocket for controller %s: %s',
+        controller.name,
+        error instanceof Error ? error.message : error,
+      );
     }
   }
 
