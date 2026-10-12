@@ -67,13 +67,14 @@ export const mockPlatform = {
   },
 };
 
-export function createService() {
+export function createService(subtype?: string) {
   const onCharacteristic = {
     onSet: jest.fn().mockReturnThis(),
     onGet: jest.fn().mockReturnThis(),
     on: jest.fn().mockReturnThis(),
   };
   return {
+    subtype,
     characteristic: onCharacteristic,
     getCharacteristic: jest.fn().mockReturnValue(onCharacteristic),
     setCharacteristic: jest.fn().mockReturnThis(),
@@ -91,9 +92,12 @@ export function createAccessory() {
   return {
     mainService,
     presetServices,
+    get services() {
+      return [mainService, ...Object.values(presetServices)];
+    },
     getService: jest.fn().mockReturnValue(mainService),
     addService: jest.fn((_type, _name, subtype: string) => {
-      presetServices[subtype] = createService();
+      presetServices[subtype] = createService(subtype);
       return presetServices[subtype];
     }),
     getServiceById: jest.fn((_type, subtype: string) => presetServices[subtype]),

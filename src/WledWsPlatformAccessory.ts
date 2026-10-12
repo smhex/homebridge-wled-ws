@@ -2,8 +2,6 @@ import {
   Service,
   PlatformAccessory,
   CharacteristicValue,
-  CharacteristicGetCallback,
-  CharacteristicSetCallback,
 } from 'homebridge';
 import { WledWsHomebridgePlatform } from './WledWsHomebridgePlatform';
 import {
@@ -140,6 +138,17 @@ export class WledWsPlatformAccessory {
 
       // link service to main service
       this.service.addLinkedService(this.realTimeService);
+    }
+
+    // preset switches restored from the cache get their handlers once the presets are received.
+    // Until then reject changes, otherwise HomeKit would accept them without anything happening
+    for (const presetSwitchService of this.accessory.services) {
+      if (presetSwitchService.subtype?.startsWith('WLED-PRESET-')) {
+        presetSwitchService
+          .getCharacteristic(this.platform.Characteristic.On)
+          .onGet(() => false)
+          .onSet(() => this.rejectPresetNotLoaded());
+      }
     }
 
     // Connect the controller with Reconnect-Flag set to false
@@ -412,11 +421,7 @@ export class WledWsPlatformAccessory {
   /**
    * Sets the preset state from Homekit
    */
-  async setPreset(
-    preset: WledControllerPreset,
-    value: CharacteristicValue,
-    callback: CharacteristicSetCallback,
-  ) {
+  async setPreset(preset: WledControllerPreset, value: CharacteristicValue) {
     // only proceed if controller is connected
     const controller = <WledController>this.accessory.context.device;
     if (!this.connectionEstablished) {
@@ -444,13 +449,26 @@ export class WledWsPlatformAccessory {
     } else {
       this.wledClient.turnOff();
     }
-    callback(null);
+  }
+
+  /**
+   * Rejects a change of a cached preset switch whose preset has not been received from the controller yet
+   */
+  rejectPresetNotLoaded(): never {
+    const controller = <WledController>this.accessory.context.device;
+    this.platform.log.error(
+      'Presets of controller %s not loaded yet',
+      controller.name,
+    );
+    throw new this.platform.api.hap.HapStatusError(
+      this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE,
+    );
   }
 
   /**
    * Returns the preset state to Homekit
    */
-  getPreset(preset: WledControllerPreset, callback: CharacteristicGetCallback) {
+  async getPreset(preset: WledControllerPreset): Promise<CharacteristicValue> {
     this.platform.log.debug(
       'Get On state for %s %s (%s) of controller %s: %s',
       preset.isPlaylist ? 'playlist' : 'preset',
@@ -459,7 +477,7 @@ export class WledWsPlatformAccessory {
       preset.controller.name,
       preset.on ? 'On' : 'Off',
     );
-    callback(null, preset.on);
+    return preset.on;
   }
 
   /**
@@ -960,12 +978,8 @@ export class WledWsPlatformAccessory {
 
         presetSwitchService
           .getCharacteristic(this.platform.Characteristic.On)
-          .on('get', (callback) => {
-            this.getPreset(wledControllerPreset, callback);
-          })
-          .on('set', (value, callback) => {
-            this.setPreset(wledControllerPreset, value, callback);
-          });
+          .onGet(() => this.getPreset(wledControllerPreset))
+          .onSet((value) => this.setPreset(wledControllerPreset, value));
 
         // store them for later usage
         this.presetList.push(wledControllerPreset);
