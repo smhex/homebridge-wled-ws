@@ -916,8 +916,12 @@ export class WledWsPlatformAccessory {
       );
     }
 
+    // presets configured by the user that are available on the controller. Stays empty if no presets
+    // are configured, so all cached preset switches are removed below
+    let existingPresets: PresetElementDescription[] = [];
+
     // check if presets are configured by user and create list of available presets on the controller
-    if (controller.presets !== undefined) {
+    if (controller.presets) {
       const configuredPresets: string[] = controller.presets.split(',');
       const presetElementList: PresetElementDescription[] = [];
       for (const key of Object.keys(this.wledClient.presets)) {
@@ -962,7 +966,7 @@ export class WledWsPlatformAccessory {
       }
 
       // reduce list with presets to the user configured elements
-      const existingPresets = presetElementList.filter((obj) =>
+      existingPresets = presetElementList.filter((obj) =>
         configuredPresets.includes(obj.name),
       );
 
@@ -1025,23 +1029,23 @@ export class WledWsPlatformAccessory {
           controller.name,
         );
       }
+    }
 
-      // Delete orphaned services which were created earlier and not needed anymore
-      for (let i = 0; i <= 250; i++) {
-        const cachedService = this.accessory.getServiceById(
-          this.platform.Service.Switch,
-          'WLED-PRESET-' + i,
-        );
-        if (cachedService) {
-          if (!existingPresets.some((obj) => obj.id === i.toString())) {
-            this.platform.log.debug(
-              'Remove cached preset switch with id %s for controller',
-              i,
-              controller.name,
-            );
-            this.service.removeLinkedService(cachedService);
-            this.accessory.removeService(cachedService);
-          }
+    // Delete orphaned services which were created earlier and not needed anymore
+    for (let i = 0; i <= 250; i++) {
+      const cachedService = this.accessory.getServiceById(
+        this.platform.Service.Switch,
+        'WLED-PRESET-' + i,
+      );
+      if (cachedService) {
+        if (!existingPresets.some((obj) => obj.id === i.toString())) {
+          this.platform.log.debug(
+            'Remove cached preset switch with id %s for controller %s',
+            i,
+            controller.name,
+          );
+          this.service.removeLinkedService(cachedService);
+          this.accessory.removeService(cachedService);
         }
       }
     }
