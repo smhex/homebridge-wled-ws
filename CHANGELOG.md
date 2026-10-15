@@ -1,3 +1,10 @@
+## 0.0.27 (Unreleased)
+
+### Improvements
+- **Homebridge 2**: Builds against Homebridge 2.1.1 with the required ES2022 and Web API type definitions. Keeps the emitted JavaScript target at ES2018.
+- **Compatibility checks**: Builds and tests against Homebridge 1.11.4 and 2.1.1 on Node.js 20, 22, and 24 without running automatic dependency repairs during CI.
+- **Dependencies**: Updates ESLint and typescript-eslint, groups weekly minor/patch updates and security updates separately, and defers TypeScript 7 until the test and lint tools support it.
+
 ## 0.0.26 (2026-10-15)
 
 ### Bugfixes
