@@ -1058,6 +1058,10 @@ export class WledWsPlatformAccessory {
     if (!this.init) {
       this.updateAccessoryInformation();
       this.init = true;
+
+      // WLEDClient emits the initial state before the info. Brightness and colors of that state
+      // were skipped as the light capabilities were unknown - apply them now
+      this.onStateReceived();
     }
   }
 
