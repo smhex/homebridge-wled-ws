@@ -26,6 +26,23 @@ export class FakeClient {
   disconnect = jest.fn();
   setPreset = jest.fn();
   turnOff = jest.fn();
+  setColor = jest.fn();
+  setCCT = jest.fn();
+  state = {
+    on: true,
+    liveDataOverride: 1,
+    brightness: 128,
+    segments: [{ colors: [[255, 0, 0]], cct: 127 }],
+    presetId: -1,
+    playlistId: -1,
+  };
+  info = {
+    brand: 'WLED',
+    product: 'FOSS',
+    version: '0.15.0',
+    mac: 'aabbccddeeff',
+    leds: { lightCapabilities: 1 },
+  };
   presets = {
     '1': { name: 'Preset1', segments: [] },
     '2': { name: 'Preset2', segments: [] },
@@ -52,6 +69,10 @@ export const mockPlatform = {
   Characteristic: {
     Name: 'Name',
     On: 'On',
+    Brightness: 'Brightness',
+    Hue: 'Hue',
+    Saturation: 'Saturation',
+    ColorTemperature: 'ColorTemperature',
     Manufacturer: 'Manufacturer',
     Model: 'Model',
     FirmwareRevision: 'FirmwareRevision',
