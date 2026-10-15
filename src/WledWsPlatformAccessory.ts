@@ -138,6 +138,20 @@ export class WledWsPlatformAccessory {
 
       // link service to main service
       this.service.addLinkedService(this.realTimeService);
+    } else {
+      // remove the switch restored from the cache if the button has been turned off
+      const cachedRealTimeService = this.accessory.getServiceById(
+        this.platform.Service.Switch,
+        'WLED-LIVE',
+      );
+      if (cachedRealTimeService) {
+        this.platform.log.debug(
+          'Remove cached real time mode switch for controller %s',
+          controller.name,
+        );
+        this.service.removeLinkedService(cachedRealTimeService);
+        this.accessory.removeService(cachedRealTimeService);
+      }
     }
 
     // preset switches restored from the cache get their handlers once the presets are received.
