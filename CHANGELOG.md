@@ -1,3 +1,16 @@
+## 0.0.26 (2026-10-15)
+
+### Bugfixes
+- **Connection recovery**: Ignores events from replaced WLED clients to prevent stale updates after reconnecting (#467).
+- **WebSocket reconnect**: Retries connections when HTTP succeeds but the WebSocket connection fails (#468).
+- **Heartbeat timeout**: Detects missing heartbeat responses after 10 seconds and reconnects automatically (#469).
+- **Preset switches**: Prevents crashes when used while disconnected and rejects changes until cached presets have been loaded (#470).
+
+### Improvements
+- **Security**: Fixes vulnerabilities in dependencies.
+- **Development**: Uses TypeScript and Node.js watch modes for automatic builds and restarts.
+- **Tests**: Adds regression tests for connection recovery and preset switches, fixes the TypeScript 6 test setup, and runs tests in the build workflow.
+
 ## 0.0.25 (2026-09-15)
 
 ### Improvements
