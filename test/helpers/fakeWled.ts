@@ -122,7 +122,11 @@ export function createAccessory() {
       return presetServices[subtype];
     }),
     getServiceById: jest.fn((_type, subtype: string) => presetServices[subtype]),
-    removeService: jest.fn(),
+    removeService: jest.fn((service: ReturnType<typeof createService>) => {
+      if (service.subtype) {
+        delete presetServices[service.subtype];
+      }
+    }),
     context: {
       device: {
         name: 'TestDevice',
