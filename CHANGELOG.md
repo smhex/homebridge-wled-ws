@@ -1,3 +1,19 @@
+## 0.0.27 (Unreleased)
+
+### Bugfixes
+- **Initial state**: Applies brightness and colors after the controller's light capabilities are known (#471).
+- **Cached switches**: Removes disabled live-mode switches and all preset switches when no presets are configured, including while the controller is offline (#474, #475).
+- **Presets**: Rebuilds the preset list without duplicates and synchronizes switches after startup, reconnects, and power changes with an unchanged preset ID (#473). Rejects stale callbacks and reports failed writes as HomeKit communication errors.
+- **Playlists**: Resets momentary switches after HomeKit completes each write, including repeated triggers of the same playlist.
+- **Color temperature**: Keeps HomeKit values in Mired and synchronizes the first controller value even when it equals the internal default. Suppresses unchanged updates and respects the logging setting (#472).
+
+### Improvements
+- **Homebridge 2**: Builds against Homebridge 2.1.1 with the required ES2022 and Web API type definitions. Keeps the emitted JavaScript target at ES2018.
+- **Compatibility checks**: Builds and tests against the latest Homebridge 1.x on Node.js 20/22/24 and Homebridge 2.x on Node.js 22/24 without running automatic dependency repairs during CI.
+- **GitHub Actions**: Updates checkout and setup-node to v7 with the Node.js 24 action runtime, and caches npm downloads in the build workflow.
+- **Releases**: Publishes beta versions to the npm `beta` channel and stable versions to `latest`, with version checks and tests before publication.
+- **Dependencies**: Updates ESLint and typescript-eslint, groups weekly minor/patch updates and security updates separately, and defers TypeScript 7 until the test and lint tools support it.
+
 ## 0.0.26 (2026-10-15)
 
 ### Bugfixes
