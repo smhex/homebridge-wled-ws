@@ -965,6 +965,13 @@ export class WledWsPlatformAccessory {
       const existingPresets = presetElementList.filter((obj) =>
         configuredPresets.includes(obj.name),
       );
+
+      // presets are received again on every reconnect - rebuild the list instead of appending to it.
+      // The active preset is looked up again by id, otherwise it would point to a dropped object
+      const lastActivePreset = this.activePreset;
+      this.presetList = [];
+      this.activePreset = null;
+
       for (const preset of existingPresets) {
         // add a switch for each preset in Homekit
         let presetSwitchService = this.accessory.getServiceById(
@@ -1004,6 +1011,10 @@ export class WledWsPlatformAccessory {
 
         // store them for later usage
         this.presetList.push(wledControllerPreset);
+        if (preset.id === lastActivePreset?.id) {
+          wledControllerPreset.on = lastActivePreset.on;
+          this.activePreset = wledControllerPreset;
+        }
 
         //this.switchServices.push(presetSwitchService);
         this.platform.log.debug(
