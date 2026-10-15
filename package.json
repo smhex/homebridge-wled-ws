@@ -2,7 +2,7 @@
   "private": false,
   "displayName": "Homebridge Wled Ws",
   "name": "homebridge-wled-ws",
-  "version": "0.0.25",
+  "version": "0.0.26",
   "description": "WLED strips plugin for Homebridge",
   "license": "Apache-2.0",
   "author": "smhex <smhex@mailbox.org>",
@@ -30,7 +30,7 @@
   "scripts": {
     "lint": "eslint eslint.config.mjs",
     "lint:fix": "eslint eslint.config.mjs --fix --max-warnings=0",
-    "watch": "npm run build && npm link && nodemon",
+    "watch": "npm run build && npm link && node scripts/watch.cjs",
     "build": "rimraf ./dist && tsc",
     "prepublishOnly": "npm run lint && npm run build",
     "test": "jest --detectOpenHandles"
@@ -38,6 +38,11 @@
   "dependencies": {
     "glob": "^13.0.6",
     "wled-client": "^0.22.1"
+  },
+  "overrides": {
+    "@istanbuljs/load-nyc-config": {
+      "js-yaml": "^4.3.2"
+    }
   },
   "publishConfig": {
     "@smhex:registry": "https://npm.pkg.github.com"
@@ -48,7 +53,6 @@
     "eslint": "^10.0.2",
     "homebridge": "^1.7.0",
     "jest": "^30.3.0",
-    "nodemon": "^3.0.3",
     "rimraf": "^6.0.1",
     "ts-jest": "^29.4.9",
     "typescript": "^6.0.2",
