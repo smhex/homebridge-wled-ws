@@ -415,9 +415,11 @@ export class WledWsPlatformAccessory {
     }
         
     const cct = miredToCct(mired);
-    this.ledState.ColorTemperature = cct;
-        
-    this.platform.log.info(`Set controller %s temperature to: %s `, controller.name, cct);
+    this.ledState.ColorTemperature = mired;
+
+    if (this.loggingEnabled){
+      this.platform.log.info(`Set controller %s temperature to: %s `, controller.name, cct);
+    }
     this.wledClient.setColor([0, 0, 0, 255]);
     this.wledClient.setCCT(cct);
   }
@@ -768,11 +770,16 @@ export class WledWsPlatformAccessory {
         this.ledState.LightCapability === LightCapability.RGBWCCT) {
       const val = this.wledClient.state.segments[0].cct;
       const mired = cctToMired(val);
-          
-      this.ledState.ColorTemperature = mired;
-      this.platform.log.info('Controller %s updated current color temperture to: %s', controller.name, val);
-          
-      this.service.updateCharacteristic(this.platform.Characteristic.ColorTemperature, this.ledState.ColorTemperature);
+
+      if (this.ledState.ColorTemperature !== mired) {
+        this.ledState.ColorTemperature = mired;
+
+        if (this.loggingEnabled){
+          this.platform.log.info('Controller %s updated current color temperature to: %s', controller.name, val);
+        }
+
+        this.service.updateCharacteristic(this.platform.Characteristic.ColorTemperature, this.ledState.ColorTemperature);
+      }
     }
       
     // check for updated preset
