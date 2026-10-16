@@ -106,3 +106,56 @@ describe('WledWsPlatformAccessory cached preset switches', () => {
     expect(clients[0].setPreset).toHaveBeenCalledWith('1');
   });
 });
+
+describe('WledWsPlatformAccessory presets received again', () => {
+  let accessory: ReturnType<typeof createAccessory>;
+  let instance: WledWsPlatformAccessory;
+
+  beforeEach(async () => {
+    jest.useFakeTimers();
+    jest.clearAllMocks();
+    clients.length = 0;
+    accessory = createAccessory();
+    instance = new WledWsPlatformAccessory(
+      mockPlatform as any,
+      mockLogger as any,
+      accessory as any,
+      false,
+    );
+    clients[0].emit('open');
+    await flushPromises();
+    clients[0].emit('update:state');
+    clients[0].emit('update:info');
+  });
+
+  afterEach(() => {
+    instance.disconnect();
+    jest.useRealTimers();
+  });
+
+  it('does not duplicate presets', () => {
+    clients[0].emit('update:presets');
+    clients[0].emit('update:presets');
+
+    expect(instance['presetList'].map((p) => p.id)).toEqual(['1', '2']);
+  });
+
+  it('keeps the active preset so it is switched off when another preset is selected', async () => {
+    clients[0].emit('update:presets');
+    clients[0].state.presetId = 1;
+    clients[0].emit('update:state');
+
+    clients[0].emit('update:presets');
+    const preset1 = accessory.presetServices['WLED-PRESET-1'];
+    const getCalls = preset1.characteristic.onGet.mock.calls;
+    const getPreset1 = getCalls[getCalls.length - 1][0];
+    await expect(getPreset1()).resolves.toBe(true);
+
+    preset1.updateCharacteristic.mockClear();
+    clients[0].state.presetId = 2;
+    clients[0].emit('update:state');
+
+    expect(preset1.updateCharacteristic).toHaveBeenCalledWith('On', false);
+    await expect(getPreset1()).resolves.toBe(false);
+  });
+});
