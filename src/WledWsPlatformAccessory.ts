@@ -193,9 +193,9 @@ export class WledWsPlatformAccessory {
       );
     }
     if (value) {
-      this.wledClient.turnOn();
+      await this.sendCommand('turn on', () => this.wledClient.turnOn());
     } else {
-      this.wledClient.turnOff();
+      await this.sendCommand('turn off', () => this.wledClient.turnOff());
     }
   }
 
@@ -247,7 +247,7 @@ export class WledWsPlatformAccessory {
     }
 
     if (value) {
-      this.wledClient.allowLiveData();
+      await this.sendCommand('allow live data', () => this.wledClient.allowLiveData());
     } else {
       if (this.loggingEnabled){
         this.platform.log.info(
@@ -255,7 +255,9 @@ export class WledWsPlatformAccessory {
           controller.resetRealTimeModeAfterStream ? 'true' : 'false',
         );
       }
-      this.wledClient.ignoreLiveData(!controller.resetRealTimeModeAfterStream);
+      await this.sendCommand('ignore live data', () =>
+        this.wledClient.ignoreLiveData(!controller.resetRealTimeModeAfterStream),
+      );
     }
   }
 
@@ -296,8 +298,10 @@ export class WledWsPlatformAccessory {
         value,
       );
     }
-    this.wledClient.setBrightness(
-      Math.round((this.ledState.Brightness * 255) / 100),
+    await this.sendCommand('set brightness', () =>
+      this.wledClient.setBrightness(
+        Math.round((this.ledState.Brightness * 255) / 100),
+      ),
     );
   }
 
@@ -344,7 +348,7 @@ export class WledWsPlatformAccessory {
         value,
       );
     }
-    this.wledClient.setColor([r, g, b]);
+    await this.sendCommand('set color', () => this.wledClient.setColor([r, g, b]));
   }
 
   /**
@@ -385,7 +389,7 @@ export class WledWsPlatformAccessory {
         value,
       );
     }
-    this.wledClient.setColor([r, g, b]);
+    await this.sendCommand('set color', () => this.wledClient.setColor([r, g, b]));
   }
 
   /**
@@ -418,8 +422,8 @@ export class WledWsPlatformAccessory {
     this.ledState.ColorTemperature = cct;
         
     this.platform.log.info(`Set controller %s temperature to: %s `, controller.name, cct);
-    this.wledClient.setColor([0, 0, 0, 255]);
-    this.wledClient.setCCT(cct);
+    await this.sendCommand('set color', () => this.wledClient.setColor([0, 0, 0, 255]));
+    await this.sendCommand('set color temperature', () => this.wledClient.setCCT(cct));
   }
     
   /**
@@ -459,9 +463,30 @@ export class WledWsPlatformAccessory {
     // switch on new preset
     preset.on = <boolean>value;
     if (preset.on) {
-      this.wledClient.setPreset(preset.id);
+      await this.sendCommand('set preset', () => this.wledClient.setPreset(preset.id));
     } else {
-      this.wledClient.turnOff();
+      await this.sendCommand('turn off', () => this.wledClient.turnOff());
+    }
+  }
+
+  /**
+   * Sends a command to the controller. WLEDClient falls back to HTTP if the websocket send fails
+   * and rejects if that fails as well - report this to Homekit instead of leaving the rejection unhandled
+   */
+  async sendCommand(description: string, command: () => Promise<unknown>) {
+    const controller = <WledController>this.accessory.context.device;
+    try {
+      await command();
+    } catch (error) {
+      this.platform.log.error(
+        'Failed to %s on controller %s: %s',
+        description,
+        controller.name,
+        error instanceof Error ? error.message : error,
+      );
+      throw new this.platform.api.hap.HapStatusError(
+        this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE,
+      );
     }
   }
 
