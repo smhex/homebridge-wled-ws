@@ -80,7 +80,7 @@ describe('WledWsHomebridgePlatform', () => {
   });
 
   it('should initialize and discover devices', () => {
-    const platform = new WledWsHomebridgePlatform(mockLog as any, mockConfig as any, mockApi as any);
+    new WledWsHomebridgePlatform(mockLog as any, mockConfig as any, mockApi as any);
     expect(mockLog.debug).toHaveBeenCalledWith('Finished initializing platform:', 'TestPlatform');
     expect(mockLog.info).toHaveBeenCalledWith(
       'Loading configuration for controller %s at address %s',

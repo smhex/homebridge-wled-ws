@@ -1,7 +1,7 @@
 jest.mock('wled-client');
 
 import { WledWsPlatformAccessory } from '../src/WledWsPlatformAccessory';
-import { LightCapability, WledControllerPreset } from '../src/WledController';
+import { LightCapability } from '../src/WledController';
 
 // Mock-Objekte für Abhängigkeiten
 const mockLogger = { info: jest.fn(), error: jest.fn(), debug: jest.fn() };
@@ -35,7 +35,7 @@ const mockAccessory =  {
   },
   displayName: 'TestDevice',
   UUID: 'test-uuid',
-    ledState: {
+  ledState: {
     On: false,
     Live: false,
     Brightness: 0,
@@ -206,5 +206,5 @@ describe('WledWsPlatformAccessory', () => {
     expect(instance['ledState'].Hue).toBe(0); // RGB (255,0,0) -> Hue 0°
     expect(instance['ledState'].Saturation).toBe(100); // RGB (255,0,0) -> Sättigung 100%
     expect(mockLogger.info).toHaveBeenCalled(); // Logger wurde genutzt
-});
+  });
 });
