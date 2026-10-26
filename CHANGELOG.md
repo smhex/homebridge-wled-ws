@@ -1,4 +1,4 @@
-## 0.0.27 (Unreleased)
+## 0.0.27-beta.1 (2026-10-26)
 
 ### Bugfixes
 - **Controller commands**: Awaits failed writes and reports communication errors to HomeKit instead of leaving rejected promises unhandled (#483). Sends white-channel and color-temperature changes together in one request.
