@@ -72,8 +72,7 @@ describe('WledWsPlatformAccessory color temperature', () => {
 
     await instance.setColorTemperature(mired);
 
-    expect(clients[0].setColor).toHaveBeenCalledWith([0, 0, 0, 255]);
-    expect(clients[0].setCCT).toHaveBeenCalledWith(cct);
+    expect(clients[0].updateSegment).toHaveBeenCalledWith(0, { colors: [[0, 0, 0, 255]], cct });
     await expect(instance.getColorTemperature()).resolves.toBe(mired);
 
     // The controller echo represents the same temperature and must not cause another update.
