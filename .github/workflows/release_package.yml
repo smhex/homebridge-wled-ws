@@ -2,54 +2,66 @@ name: Publish package
 
 permissions:
   contents: read
-  pull-requests: write
 
 on:
   release:
-    types: [created]
+    types: [published]
   workflow_dispatch:
 
-jobs:
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
 
+jobs:
   build:
     runs-on: ubuntu-latest
-
-    strategy:
-        fail-fast: false
-        matrix:
-            # the Node.js versions to build on
-            node-version: [20.x, 22.x, 24.x ]
-
+    outputs:
+      npm_tag: ${{ steps.release.outputs.npm_tag }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - name: Use Node.js ${{ matrix.node-version }} 
-        uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
         with:
-            node-version: ${{ matrix.node-version }}
+          node-version: 24.x
+          package-manager-cache: false
+
+      - name: Validate release version and select npm channel
+        id: release
+        run: node scripts/release-channel.cjs
 
       - name: Install dependencies
         run: npm ci
- #     - run: npm test
+
+      - name: Lint, build and test
+        run: |
+          npm run lint
+          npm run build
+          npm test
 
   publish-gpr:
     needs: build
     runs-on: ubuntu-latest
-
     permissions:
       id-token: write
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-            node-version: 24
-            registry-url: https://registry.npmjs.org
+          node-version: 24.x
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+
+      - name: Install npm with trusted publishing support
+        run: npm install --global npm@11
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Publish to registry 
-        run: npm publish --access public
+      - name: Publish to npm
+        env:
+          NPM_TAG: ${{ needs.build.outputs.npm_tag }}
+        run: npm publish --access public --tag "$NPM_TAG"

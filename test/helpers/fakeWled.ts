@@ -25,9 +25,14 @@ export class FakeClient {
   init = jest.fn().mockResolvedValue(true);
   disconnect = jest.fn();
   setPreset = jest.fn();
+  turnOn = jest.fn();
   turnOff = jest.fn();
+  setBrightness = jest.fn();
   setColor = jest.fn();
   setCCT = jest.fn();
+  updateSegment = jest.fn();
+  allowLiveData = jest.fn();
+  ignoreLiveData = jest.fn();
   state = {
     on: true,
     liveDataOverride: 1,
@@ -122,7 +127,11 @@ export function createAccessory() {
       return presetServices[subtype];
     }),
     getServiceById: jest.fn((_type, subtype: string) => presetServices[subtype]),
-    removeService: jest.fn(),
+    removeService: jest.fn((service: ReturnType<typeof createService>) => {
+      if (service.subtype) {
+        delete presetServices[service.subtype];
+      }
+    }),
     context: {
       device: {
         name: 'TestDevice',
