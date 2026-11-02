@@ -15,17 +15,32 @@ jobs:
       matrix:
         # the Node.js versions to build on
         node-version: [20.x, 22.x, 24.x]
+        homebridge-version: [1.x, 2.x]
+        exclude:
+          # Homebridge 2 supports Node.js 22 and 24.
+          - node-version: 20.x
+            homebridge-version: 2.x
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - name: Use Node.js ${{ matrix.node-version }} 
-        uses: actions/setup-node@v4
+      # Install the locked Homebridge 2 development dependencies on a supported Node.js version.
+      - name: Use Node.js 24 for dependency installation
+        uses: actions/setup-node@v7
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 24.x
+          cache: npm
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Install Homebridge compatibility version
+        run: npm install --no-save --package-lock=false --ignore-scripts homebridge@${{ matrix.homebridge-version }}
+
+      - name: Use Node.js ${{ matrix.node-version }} for validation
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node-version }}
 
       - name: Lint the project
         run: npm run lint
@@ -35,11 +50,3 @@ jobs:
 
       - name: Run tests
         run: npm test
-
-      - name: List, audit, fix outdated dependencies and build again
-        run: |
-          npm list --outdated
-          npm audit || true  # ignore failures
-          npm audit fix || true
-          npm list --outdated
-          npm run build

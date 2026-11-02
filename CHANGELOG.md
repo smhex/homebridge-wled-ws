@@ -1,3 +1,15 @@
+## 0.0.27 (2026-11-02)
+
+### Bugfixes
+- **Controller commands**: Handles failed writes and reports communication errors to HomeKit (#483).
+- **Light state**: Fixes initial brightness, color and color-temperature synchronization, and sends white-channel and temperature changes together (#471, #472).
+- **Presets and switches**: Fixes duplicate presets, stale callbacks and switch synchronization after startup, reconnects and power changes. Removes disabled cached switches, including while offline, and reliably resets playlist buttons (#473–#475).
+
+### Improvements
+- **Compatibility**: Builds against Homebridge 2 and tests Homebridge 1.x on Node.js 20/22/24 and Homebridge 2.x on Node.js 22/24.
+- **CI and releases**: Updates GitHub Actions, lints source files and tests, and validates releases before publishing to the npm `beta` or `latest` channel (#484).
+- **Dependencies**: Updates lint tools and groups routine and security updates separately.
+
 ## 0.0.26 (2026-10-15)
 
 ### Bugfixes

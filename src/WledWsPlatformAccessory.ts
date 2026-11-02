@@ -33,8 +33,9 @@ export class WledWsPlatformAccessory {
   private service: Service;
   private realTimeService?: Service;
   private presetList: WledControllerPreset[] = [];
-  private activePreset: WledControllerPreset | null = null;
-  private activePlaylist: WledControllerPreset | null = null;
+  private stateReceived = false;
+  private stateRevision = 0;
+  private presetWriteTimers = new Map<Service, Timeout>();
   private wledClient;
   private connectionClosed = false;
   private connectionEstablished = false;
@@ -46,6 +47,7 @@ export class WledWsPlatformAccessory {
   private pongTimeoutMillis = 10000;
   private heartbeatSupported = true;
   private init = false;
+  private colorTemperatureInitialized = false;
 
   /**
    * Tracks the LED state
@@ -58,8 +60,6 @@ export class WledWsPlatformAccessory {
     Saturation: 0,
     Value: 0,
     ColorTemperature: 300,
-    PresetId: '-1',
-    PlaylistId: '-1',
     LightCapability: LightCapability.OnOff,
   };
 
@@ -154,6 +154,11 @@ export class WledWsPlatformAccessory {
       }
     }
 
+    // Removing all configured presets requires no reply from an online controller.
+    if (this.configuredPresetNames().length === 0) {
+      this.removeUnusedPresetServices(new Set());
+    }
+
     // preset switches restored from the cache get their handlers once the presets are received.
     // Until then reject changes, otherwise HomeKit would accept them without anything happening
     for (const presetSwitchService of this.accessory.services) {
@@ -193,9 +198,9 @@ export class WledWsPlatformAccessory {
       );
     }
     if (value) {
-      this.wledClient.turnOn();
+      await this.sendCommand('turn on', () => this.wledClient.turnOn());
     } else {
-      this.wledClient.turnOff();
+      await this.sendCommand('turn off', () => this.wledClient.turnOff());
     }
   }
 
@@ -247,7 +252,7 @@ export class WledWsPlatformAccessory {
     }
 
     if (value) {
-      this.wledClient.allowLiveData();
+      await this.sendCommand('allow live data', () => this.wledClient.allowLiveData());
     } else {
       if (this.loggingEnabled){
         this.platform.log.info(
@@ -255,7 +260,9 @@ export class WledWsPlatformAccessory {
           controller.resetRealTimeModeAfterStream ? 'true' : 'false',
         );
       }
-      this.wledClient.ignoreLiveData(!controller.resetRealTimeModeAfterStream);
+      await this.sendCommand('ignore live data', () =>
+        this.wledClient.ignoreLiveData(!controller.resetRealTimeModeAfterStream),
+      );
     }
   }
 
@@ -296,8 +303,10 @@ export class WledWsPlatformAccessory {
         value,
       );
     }
-    this.wledClient.setBrightness(
-      Math.round((this.ledState.Brightness * 255) / 100),
+    await this.sendCommand('set brightness', () =>
+      this.wledClient.setBrightness(
+        Math.round((this.ledState.Brightness * 255) / 100),
+      ),
     );
   }
 
@@ -344,7 +353,7 @@ export class WledWsPlatformAccessory {
         value,
       );
     }
-    this.wledClient.setColor([r, g, b]);
+    await this.sendCommand('set color', () => this.wledClient.setColor([r, g, b]));
   }
 
   /**
@@ -385,7 +394,7 @@ export class WledWsPlatformAccessory {
         value,
       );
     }
-    this.wledClient.setColor([r, g, b]);
+    await this.sendCommand('set color', () => this.wledClient.setColor([r, g, b]));
   }
 
   /**
@@ -415,11 +424,14 @@ export class WledWsPlatformAccessory {
     }
         
     const cct = miredToCct(mired);
-    this.ledState.ColorTemperature = cct;
-        
-    this.platform.log.info(`Set controller %s temperature to: %s `, controller.name, cct);
-    this.wledClient.setColor([0, 0, 0, 255]);
-    this.wledClient.setCCT(cct);
+    this.ledState.ColorTemperature = mired;
+
+    if (this.loggingEnabled){
+      this.platform.log.info(`Set controller %s temperature to: %s `, controller.name, cct);
+    }
+    await this.sendCommand('set color temperature', () =>
+      this.wledClient.updateSegment(0, { colors: [[0, 0, 0, 255]], cct }),
+    );
   }
     
   /**
@@ -445,6 +457,10 @@ export class WledWsPlatformAccessory {
       );
     }
 
+    if (!this.presetList.includes(preset)) {
+      this.rejectPresetNotLoaded();
+    }
+
     if (this.loggingEnabled){
       this.platform.log.info(
         'Set On state for %s %s (%s) of controller %s to: %s',
@@ -456,12 +472,72 @@ export class WledWsPlatformAccessory {
       );
     }
 
-    // switch on new preset
-    preset.on = <boolean>value;
-    if (preset.on) {
-      this.wledClient.setPreset(preset.id);
-    } else {
-      this.wledClient.turnOff();
+    // Await transport errors so Homebridge can reject the write without an unhandled rejection.
+    const client = this.wledClient;
+    const stateRevision = this.stateRevision;
+    try {
+      if (value) {
+        await client.setPreset(preset.id);
+      } else if (!preset.isPlaylist) {
+        await client.turnOff();
+      }
+    } catch (error) {
+      this.platform.log.error('Error setting preset %s of controller %s: %s', preset.name, controller.name, error);
+      throw new this.platform.api.hap.HapStatusError(
+        this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE,
+      );
+    }
+
+    // A refresh or reconnect may have replaced the callback's preset while the write was pending.
+    if (client !== this.wledClient || !this.presetList.includes(preset)) {
+      this.rejectPresetNotLoaded();
+    }
+
+    if (preset.isPlaylist) {
+      preset.on = false;
+    } else if (this.stateRevision === stateRevision) {
+      // Optimistically acknowledge the write only if no newer controller state has arrived.
+      preset.on = Boolean(value);
+    }
+
+    const service = preset.hapService;
+    const previousTimer = this.presetWriteTimers.get(service);
+    if (previousTimer !== undefined) {
+      clearTimeout(previousTimer);
+    }
+    // HAP writes the requested value after onSet resolves. Reconcile it afterwards with a
+    // response received during the write, or reset the momentary playlist switch.
+    const timer = setTimeout(() => {
+      this.presetWriteTimers.delete(service);
+      if (!this.connectionClosed && client === this.wledClient) {
+        // List refreshes replace preset objects but preserve the HomeKit service.
+        const currentPreset = this.presetList.find((item) => item.hapService === service);
+        if (currentPreset) {
+          service.updateCharacteristic(this.platform.Characteristic.On, currentPreset.on);
+        }
+      }
+    }, 0);
+    this.presetWriteTimers.set(service, timer);
+  }
+
+  /**
+   * Sends a command to the controller. WLEDClient falls back to HTTP if the websocket send fails
+   * and rejects if that fails as well - report this to Homekit instead of leaving the rejection unhandled
+   */
+  async sendCommand(description: string, command: () => Promise<unknown>) {
+    const controller = <WledController>this.accessory.context.device;
+    try {
+      await command();
+    } catch (error) {
+      this.platform.log.error(
+        'Failed to %s on controller %s: %s',
+        description,
+        controller.name,
+        error instanceof Error ? error.message : error,
+      );
+      throw new this.platform.api.hap.HapStatusError(
+        this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE,
+      );
     }
   }
 
@@ -491,7 +567,7 @@ export class WledWsPlatformAccessory {
       preset.controller.name,
       preset.on ? 'On' : 'Off',
     );
-    return preset.on;
+    return this.presetList.includes(preset) && preset.on;
   }
 
   /**
@@ -501,6 +577,8 @@ export class WledWsPlatformAccessory {
   async connect(isReconnect: boolean): Promise<boolean> {
     this.connectionClosed = false;
     this.connectionEstablished = false;
+    this.stateReceived = false;
+    this.clearPendingPresetWrites();
 
     const controller = <WledController>this.accessory.context.device;
     this.platform.log.info(
@@ -613,6 +691,7 @@ export class WledWsPlatformAccessory {
    * Disconnects the controller. This happens on shutdown of the plugin only
    */
   disconnect() {
+    this.clearPendingPresetWrites();
     if (!this.connectionClosed) {
       const controller = <WledController>this.accessory.context.device;
       this.platform.log.info('Disconnecting controller %s', controller.name);
@@ -768,129 +847,59 @@ export class WledWsPlatformAccessory {
         this.ledState.LightCapability === LightCapability.RGBWCCT) {
       const val = this.wledClient.state.segments[0].cct;
       const mired = cctToMired(val);
-          
-      this.ledState.ColorTemperature = mired;
-      this.platform.log.info('Controller %s updated current color temperture to: %s', controller.name, val);
-          
-      this.service.updateCharacteristic(this.platform.Characteristic.ColorTemperature, this.ledState.ColorTemperature);
+
+      // The default value has not necessarily been synchronized to a restored HomeKit service.
+      if (!this.colorTemperatureInitialized || this.ledState.ColorTemperature !== mired) {
+        this.ledState.ColorTemperature = mired;
+
+        if (this.loggingEnabled){
+          this.platform.log.info('Controller %s updated current color temperature to: %s', controller.name, val);
+        }
+
+        this.service.updateCharacteristic(this.platform.Characteristic.ColorTemperature, this.ledState.ColorTemperature);
+        this.colorTemperatureInitialized = true;
+      }
     }
       
-    // check for updated preset
-    if (this.ledState.PresetId !== this.wledClient.state.presetId) {
+    this.stateReceived = true;
+    this.stateRevision++;
+    this.synchronizePresetSwitches();
+  }
 
-      if (this.loggingEnabled){
-        this.platform.log.info(
-          'Controller %s updated current preset to: %s',
-          controller.name,
-          this.wledClient.state.presetId,
-        );
-      }
-
-      // switch off active preset first
-      if (this.activePreset !== null) {
-        this.activePreset.on = false;
-
-        if (this.loggingEnabled){
-          this.platform.log.info(
-            'Set On state for last active %s %s (%s) of controller %s to: %s',
-            this.activePreset.isPlaylist ? 'playlist' : 'preset',
-            this.activePreset.id,
-            this.activePreset.name,
-            this.activePreset.controller.name,
-            this.activePreset.on ? 'On' : 'Off',
-          );
-        }
-      
-        this.activePreset.hapService.updateCharacteristic(
-          this.platform.Characteristic.On,
-          this.activePreset.on,
-        );
-        this.activePreset = null;
-      } else {
-        this.platform.log.debug(
-          'Last active preset not set for controller %s',
-          controller.name,
-        );
-      }
-
-      // switch to new preset and update state
-      const newPreset = this.presetList.find(
-        (obj) => obj.id === this.wledClient.state.presetId.toString(),
-      );
-      if (newPreset !== undefined) {
-        newPreset.on = this.ledState.On;
-
-        if (this.loggingEnabled){
-          this.platform.log.info(
-            'Set On state for new %s %s (%s) of controller %s to: %s',
-            newPreset.isPlaylist ? 'playlist' : 'preset',
-            newPreset.id,
-            newPreset.name,
-            newPreset.controller.name,
-            newPreset.on ? 'On' : 'Off',
-          );
-        }
-      
-        newPreset.hapService.updateCharacteristic(
-          this.platform.Characteristic.On,
-          newPreset.on,
-        );
-
-        // set new preset as active preset
-        this.activePreset = newPreset;
-      } else {
-        if (this.wledClient.state.presetId.toString() === '-1') {
-          this.platform.log.debug(
-            'No preset selected by controller %s',
-            controller.name,
-          );
-        } else {
-          this.platform.log.debug(
-            'Preset not configured for controller %s',
-            controller.name,
-          );
-        }
+  /** Keep switch values derived from the current client's state, independent of event order. */
+  private synchronizePresetSwitches(force = false) {
+    const state = this.wledClient.state;
+    for (const preset of this.presetList) {
+      const on = this.stateReceived && Boolean(state.on) &&
+        !preset.isPlaylist && preset.id === String(state.presetId);
+      if (force || preset.on !== on) {
+        preset.on = on;
+        preset.hapService.updateCharacteristic(this.platform.Characteristic.On, on);
       }
     }
-    this.ledState.PresetId = this.wledClient.state.presetId;
+  }
 
-    // check for updated playlist
-    if (this.ledState.PlaylistId !== this.wledClient.state.playlistId) {
-      if (this.wledClient.state.playlistId !== '-1') {
+  private configuredPresetNames(): string[] {
+    const controller = <WledController>this.accessory.context.device;
+    return (controller.presets || '').split(',').map((name) => name.trim()).filter(Boolean);
+  }
 
-        if (this.loggingEnabled){
-          this.platform.log.info(
-            'Controller %s updated current playlist to: %s',
-            controller.name,
-            this.wledClient.state.playlistId,
-          );
-        }
+  private clearPendingPresetWrites() {
+    for (const timer of this.presetWriteTimers.values()) {
+      clearTimeout(timer);
+    }
+    this.presetWriteTimers.clear();
+  }
 
-        // immediately switch off playlist
-        const newPlaylist = this.presetList.find(
-          (obj) => obj.id === this.wledClient.state.playlistId.toString(),
-        );
-        if (newPlaylist !== undefined) {
-          newPlaylist.on = false;
-
-          if (this.loggingEnabled){
-            this.platform.log.info(
-              'Set On state for new %s %s (%s) of controller %s to: %s',
-              newPlaylist.isPlaylist ? 'playlist' : 'preset',
-              newPlaylist.id,
-              newPlaylist.name,
-              newPlaylist.controller.name,
-              newPlaylist.on ? 'On' : 'Off',
-            );
-          }
-        
-          newPlaylist.hapService.updateCharacteristic(
-            this.platform.Characteristic.On,
-            newPlaylist.on,
-          );
-        }
+  private removeUnusedPresetServices(keptIds: Set<string>) {
+    const controller = <WledController>this.accessory.context.device;
+    for (const service of [...this.accessory.services]) {
+      const prefix = 'WLED-PRESET-';
+      if (service.subtype?.startsWith(prefix) && !keptIds.has(service.subtype.slice(prefix.length))) {
+        this.platform.log.debug('Remove cached preset switch %s for controller %s', service.subtype, controller.name);
+        this.service.removeLinkedService(service);
+        this.accessory.removeService(service);
       }
-      this.ledState.PlaylistId = this.wledClient.state.playlistId;
     }
   }
 
@@ -909,9 +918,15 @@ export class WledWsPlatformAccessory {
       );
     }
 
-    // check if presets are configured by user and create list of available presets on the controller
-    if (controller.presets !== undefined) {
-      const configuredPresets: string[] = controller.presets.split(',');
+    // presets configured by the user that are available on the controller. Stays empty if no presets
+    // are configured, so all cached preset switches are removed below
+    let existingPresets: PresetElementDescription[] = [];
+
+    const nextPresetList: WledControllerPreset[] = [];
+    const configuredPresets = this.configuredPresetNames();
+
+    // Rebuild the list rather than retaining callbacks and values from an earlier response.
+    if (configuredPresets.length > 0) {
       const presetElementList: PresetElementDescription[] = [];
       for (const key of Object.keys(this.wledClient.presets)) {
         if (
@@ -955,9 +970,10 @@ export class WledWsPlatformAccessory {
       }
 
       // reduce list with presets to the user configured elements
-      const existingPresets = presetElementList.filter((obj) =>
+      existingPresets = presetElementList.filter((obj) =>
         configuredPresets.includes(obj.name),
       );
+
       for (const preset of existingPresets) {
         // add a switch for each preset in Homekit
         let presetSwitchService = this.accessory.getServiceById(
@@ -996,9 +1012,7 @@ export class WledWsPlatformAccessory {
           .onSet((value) => this.setPreset(wledControllerPreset, value));
 
         // store them for later usage
-        this.presetList.push(wledControllerPreset);
-
-        //this.switchServices.push(presetSwitchService);
+        nextPresetList.push(wledControllerPreset);
         this.platform.log.debug(
           'Added %s switch %s (id:%s) for controller %s',
           preset.isPlaylist ? 'playlist' : 'preset',
@@ -1007,26 +1021,11 @@ export class WledWsPlatformAccessory {
           controller.name,
         );
       }
-
-      // Delete orphaned services which were created earlier and not needed anymore
-      for (let i = 0; i <= 250; i++) {
-        const cachedService = this.accessory.getServiceById(
-          this.platform.Service.Switch,
-          'WLED-PRESET-' + i,
-        );
-        if (cachedService) {
-          if (!existingPresets.some((obj) => obj.id === i.toString())) {
-            this.platform.log.debug(
-              'Remove cached preset switch with id %s for controller',
-              i,
-              controller.name,
-            );
-            this.service.removeLinkedService(cachedService);
-            this.accessory.removeService(cachedService);
-          }
-        }
-      }
     }
+
+    this.presetList = nextPresetList;
+    this.removeUnusedPresetServices(new Set(existingPresets.map((preset) => preset.id)));
+    this.synchronizePresetSwitches(true);
   }
 
   /**
