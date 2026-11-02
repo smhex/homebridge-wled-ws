@@ -4,20 +4,26 @@ jest.mock('wled-client', () => ({ WLEDClient: jest.fn() }));
 
 import { EventEmitter } from 'node:events';
 import { createRequire } from 'node:module';
+import { pathToFileURL } from 'node:url';
 import { WLEDClient } from 'wled-client';
 import { WledWsPlatformAccessory } from '../src/WledWsPlatformAccessory';
 
 const homebridgeRequire = createRequire(require.resolve('homebridge'));
-const hap = (() => {
+let hap: any;
+
+beforeAll(async () => {
+  let hapPath: string;
   try {
-    return homebridgeRequire('@homebridge/hap-nodejs');
+    hapPath = homebridgeRequire.resolve('@homebridge/hap-nodejs');
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== 'MODULE_NOT_FOUND') {
       throw error;
     }
-    return homebridgeRequire('hap-nodejs');
+    hapPath = homebridgeRequire.resolve('hap-nodejs');
   }
-})();
+  const imported = await import(pathToFileURL(hapPath).href);
+  hap = imported.default ?? imported;
+});
 
 const createClient = () => Object.assign(new EventEmitter(), {
   init: jest.fn().mockResolvedValue(true),
@@ -52,9 +58,10 @@ describe('preset writes through the real HomeKit characteristic lifecycle', () =
   let instance: WledWsPlatformAccessory;
   let playlistOn: any;
   const log = { info: jest.fn(), error: jest.fn(), debug: jest.fn() };
-  const platform = { Service: hap.Service, Characteristic: hap.Characteristic, log, api: { hap } };
+  let platform: any;
 
   beforeEach(async () => {
+    platform = { Service: hap.Service, Characteristic: hap.Characteristic, log, api: { hap } };
     jest.useFakeTimers();
     jest.clearAllMocks();
     client = createClient();
