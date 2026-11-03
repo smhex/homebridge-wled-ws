@@ -1,3 +1,9 @@
+## 0.0.28 (Unreleased)
+
+### Improvements
+- **Compatibility**: Adds Node.js 26 support for Homebridge 2 and verifies it in CI (#476).
+- **Dependencies**: Updates ESLint, Homebridge development dependencies, Jest, ts-jest, typescript-eslint and Node.js type definitions (#485, #486).
+
 ## 0.0.27 (2026-11-02)
 
 ### Bugfixes
