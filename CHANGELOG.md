@@ -1,4 +1,4 @@
-## 0.0.28 (Unreleased)
+## 0.0.28 (2026-11-06)
 
 ### Improvements
 - **Compatibility**: Adds Node.js 26 support for Homebridge 2 and verifies it in CI (#476).
